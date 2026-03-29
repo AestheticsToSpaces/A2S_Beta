@@ -109,6 +109,7 @@ const Onboarding = () => {
     const [currentStep, setCurrentStep] = useState(0); 
     const [selections, setSelections] = useState([]);
     const [result, setResult] = useState(null);
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const setProfile = useStore(state => state.setProfile);
 
     const handleSelect = (styleId) => {
@@ -206,7 +207,7 @@ const Onboarding = () => {
                                         alt={style.label}
                                         className="w-full h-full object-cover transition-transform duration-[4s] group-hover:scale-110"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-bg-main via-bg-main/20 to-transparent group-hover:from-accent/90 transition-all duration-1000" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-accent/90 transition-all duration-1000" />
                                     
                                     <div className="absolute inset-0 flex flex-col items-center justify-end p-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-1000">
                                         <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-3xl border border-white/20 mb-6 group-hover:bg-white/20 flex items-center justify-center transition-all">

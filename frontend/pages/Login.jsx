@@ -6,7 +6,6 @@ import {
     LogIn, UserPlus
 } from 'lucide-react';
 import { login, register } from '../services/api';
-import { getOnboardingPreferences, setUser } from '../utils/storage';
 import { useToast } from '../hooks/useToast';
 import ToastContainer from '../components/ToastContainer';
 import { useStore } from '../store/useStore';
@@ -15,7 +14,6 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { toasts, removeToast, toast } = useToast();
-    const loginAction = useStore(state => state.login);
     
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
@@ -58,15 +56,10 @@ const Login = () => {
     const handleOAuth2Success = async (token) => {
         setLoading(true);
         try {
-            // Save token and fetch user profile
             localStorage.setItem('token', token);
-            // We need a way to get the user profile from the token/backend
-            // Since we don't have a direct 'getByToken' in api.js, 
-            // the backend should ideally return user info or we fetch it now.
+            useStore.getState().login({}, token);
             const { getUserProfile } = await import('../services/api');
-            const userData = await getUserProfile();
-            
-            await loginAction(userData, token);
+            await getUserProfile();
             toast.success('Successfully authenticated.');
             
             setTimeout(() => {
@@ -120,34 +113,16 @@ const Login = () => {
             } else {
                 await register(formData.name.trim(), trimmedEmail, trimmedPassword, formData.location.trim(), formData.subscribe);
                 toast.success('Identity registered successfully.');
-                // Automatically login after successful registration
                 userData = await login(trimmedEmail, trimmedPassword);
             }
-            
-            await loginAction(userData, localStorage.getItem('token'));
 
-            // First-time experience logic
-            const hasSeenTutorial = !!userData.tutorialCompleted;
-            const hasDNA = !!userData.styleDNA;
-            
-            // If they haven't seen the tutorial, send to dashboard (it will auto-trigger)
-            // If they have seen tutorial but lack DNA, send to onboarding
-            // Otherwise, go to dashboard or previous state
-            let targetPath = '/dashboard';
-            if (hasSeenTutorial && !hasDNA) {
-                targetPath = '/onboarding';
-            } else if (!hasSeenTutorial) {
-                targetPath = '/dashboard';
-            } else {
-                targetPath = location.state?.from?.pathname || '/dashboard';
-            }
+            const targetPath = location.state?.from?.pathname || '/dashboard';
 
             setTimeout(() => {
                 navigate(targetPath, { replace: true });
-            }, 800);
+            }, 600);
         } catch (err) {
-            // Handle both structured error objects and raw strings
-            const errorMsg = typeof err === 'string' ? err : (err.response?.data?.message || err.message || 'Authentication protocol failed.');
+            const errorMsg = typeof err === 'string' ? err : (err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
             setError(errorMsg);
             toast.error(errorMsg);
         } finally {

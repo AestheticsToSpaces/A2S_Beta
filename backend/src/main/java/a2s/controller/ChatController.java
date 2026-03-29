@@ -168,7 +168,7 @@ public class ChatController {
         body.add("description", description);
 
         if (image != null && !image.isEmpty()) {
-            System.out.println("[VASTU] Received image: " + image.getOriginalFilename() + " (" + image.getSize() + " bytes)");
+            System.out.println("[VASTU] Received image: " + image.getOriginalFilename() + " (" + image.getSize() + " bytes, type=" + image.getContentType() + ")");
             try {
                 ByteArrayResource imageResource = new ByteArrayResource(image.getBytes()) {
                     @Override
@@ -176,9 +176,12 @@ public class ChatController {
                         return image.getOriginalFilename();
                     }
                 };
-                body.add("image", imageResource);
+                HttpHeaders imageHeaders = new HttpHeaders();
+                imageHeaders.setContentType(MediaType.parseMediaType(
+                    image.getContentType() != null ? image.getContentType() : "image/jpeg"));
+                body.add("image", new HttpEntity<>(imageResource, imageHeaders));
             } catch (Exception e) {
-                // log error
+                System.err.println("[VASTU] Failed to process image: " + e.getMessage());
             }
         }
 

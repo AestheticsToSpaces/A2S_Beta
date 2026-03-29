@@ -48,15 +48,16 @@ const Footer = () => {
                         <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">Explore</h4>
                         <ul className="space-y-4 text-sm text-main/70 font-medium">
                             <li><Link to="/gallery" className="hover:text-accent transition-all duration-300">Explore Gallery</Link></li>
-                            <li><Link to="/vinsight" className="hover:text-accent transition-all duration-300">AI VInsight</Link></li>
-                            <li><Link to="/dashboard" state={{ activeView: '3d-studio' }} className="hover:text-accent transition-all duration-300">3D Studio</Link></li>
+                            <li><Link to="/vinsight" className="hover:text-accent transition-all duration-300">VInsight (Vastu)</Link></li>
+                            <li><Link to="/onboarding" className="hover:text-accent transition-all duration-300">Find Your Style</Link></li>
+                            <li><Link to="/waitlist" className="hover:text-accent transition-all duration-300">Phase 2 Waitlist</Link></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">About</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">Company</h4>
                         <ul className="space-y-4 text-sm text-main/70 font-medium">
-                            <li><Link to="/" className="hover:text-accent transition-all duration-300">About A2S</Link></li>
+                            <li><Link to="/dashboard" className="hover:text-accent transition-all duration-300">Dashboard</Link></li>
                             <li><Link to="/privacy-policy" className="hover:text-accent transition-all duration-300">Privacy Policy</Link></li>
                             <li><Link to="/terms-of-service" className="hover:text-accent transition-all duration-300">Terms & Conditions</Link></li>
                         </ul>

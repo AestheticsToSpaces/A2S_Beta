@@ -148,7 +148,7 @@ const FilterSidebar = ({ filters, setFilters, viewType = 'rooms', counts = { roo
                             <div className={`p-2 rounded-xl transition-all ${expandedSections.space ? 'bg-accent text-on-accent' : 'bg-neutral-50 text-neutral-400'}`}>
                                 <Home size={14} />
                             </div>
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-main">Room Types</h4>
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-main">{viewType === 'rooms' ? 'Room Types' : 'Item Type'}</h4>
                         </div>
                         <ChevronDown size={18} className={`text-neutral-300 transition-transform duration-500 ${expandedSections.space ? 'rotate-180 text-accent' : ''}`} />
                     </button>
@@ -161,11 +161,11 @@ const FilterSidebar = ({ filters, setFilters, viewType = 'rooms', counts = { roo
                                 <button
                                     key={item}
                                     onClick={() => toggleRoom(item)}
-                                    className={`group px-6 py-4 rounded-2xl border-2 transition-all duration-500 flex items-center gap-3 active:scale-95 ${isActive 
+                                    className={`group px-4 py-2.5 rounded-xl border-2 transition-all duration-500 flex items-center gap-2 active:scale-95 ${isActive 
                                         ? 'bg-neutral-900 text-white border-neutral-900 shadow-xl shadow-neutral-900/20' 
                                         : 'bg-white text-main border-neutral-50 hover:border-accent/10 hover:bg-neutral-50/50'}`}
                                 >
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{item}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-wider">{item}</span>
                                     {count > 0 && (
                                         <span className={`text-[8px] font-black transition-colors ${isActive ? 'text-white/60' : 'text-neutral-300 group-hover:text-accent'}`}>
                                             ({count})

@@ -4,10 +4,10 @@ import {
     Heart,
     Box,
     User,
-    Plus,
     ShoppingBag,
     Lock,
     Copy,
+    Check,
     Layout,
     LogOut,
     Dna,
@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 import { STORAGE_KEYS, clearUser } from '../utils/storage';
-import { getUserProfile, getDesigns, saveDesign, toggleWatchlist, getProducts, updateUserProfile } from '../services/api';
+import { getUserProfile, getDesigns, saveDesign, toggleWatchlist, getProducts, updateUserProfile, getWaitlistStatus, joinPhase2Waitlist } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -45,7 +45,6 @@ const Dashboard = () => {
     const setProfile = useStore(state => state.setProfile);
     const logout = useStore(state => state.logout);
 
-    const [projects, setProjects] = useState([]);
     const [savedDesigns, setSavedDesigns] = useState([]);
     const [savedProducts, setSavedProducts] = useState([]);
     const [allProducts, setAllProducts] = useState([]);
@@ -58,6 +57,9 @@ const Dashboard = () => {
     const [error, setError] = useState(null);
     const [activeView, setActiveView] = useState('overview');
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+    const [waitlistStatus, setWaitlistStatus] = useState({ joined: false, rank: null, progress: 0, inviteCode: '' });
+    const [joiningWaitlist, setJoiningWaitlist] = useState(false);
+    const [waitlistCopied, setWaitlistCopied] = useState(false);
     const { toasts, removeToast, toast } = useToast();
 
 
@@ -127,17 +129,6 @@ const Dashboard = () => {
         return () => window.removeEventListener('a2s-saved-update', handler);
     }, []);
 
-    useEffect(() => {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEYS.SAVED_PRESETS);
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                setProjects(Array.isArray(parsed) ? parsed : []);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }, []);
 
     useEffect(() => {
         if (location.state?.activeView) {
@@ -146,6 +137,34 @@ const Dashboard = () => {
         }
     }, [location.state]);
 
+
+    useEffect(() => {
+        getWaitlistStatus()
+            .then(data => setWaitlistStatus(data))
+            .catch(() => {});
+    }, []);
+
+    const handleJoinWaitlist = async () => {
+        setJoiningWaitlist(true);
+        try {
+            await joinPhase2Waitlist();
+            const data = await getWaitlistStatus();
+            setWaitlistStatus(data);
+            toast.success("You're on the waitlist!");
+        } catch (err) {
+            toast.error(typeof err === 'string' ? err : 'Failed to join waitlist');
+        } finally {
+            setJoiningWaitlist(false);
+        }
+    };
+
+    const copyWaitlistCode = () => {
+        if (waitlistStatus.inviteCode) {
+            navigator.clipboard.writeText(waitlistStatus.inviteCode);
+            setWaitlistCopied(true);
+            setTimeout(() => setWaitlistCopied(false), 2000);
+        }
+    };
 
     const handleLogout = async () => {
         logout();
@@ -338,67 +357,6 @@ const Dashboard = () => {
                                 </div>
     
                                 <section className="animate-fade-in-up stagger-2">
-                                    <div className="flex items-center justify-between mb-8 px-4">
-                                        <div>
-                                            <h2 className="font-serif text-3xl font-black text-main italic">Saved Projects</h2>
-                                            <p className="text-[10px] text-muted font-black uppercase tracking-[0.3em] mt-2">Room Plans</p>
-                                        </div>
-                                        <button onClick={() => setActiveView('3d-studio')} className="btn-premium btn-premium-gold px-8 py-4">
-                                            <Plus size={16} />
-                                            <span>New Project</span>
-                                        </button>
-                                    </div>
-    
-                                    <div className="glass-premium p-8 rounded-[48px] border border-premium">
-                                        {projects.length > 0 ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                {projects.map((proj) => (
-                                                    <button
-                                                        key={proj.id}
-                                                        onClick={() => setActiveView('3d-studio')}
-                                                        className="group relative glass-premium p-8 rounded-[32px] border border-premium hover:border-accent/40 shadow-sm transition-all duration-700 overflow-hidden text-left"
-                                                    >
-                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none group-hover:bg-accent/10 transition-all" />
-                                                        <div className="flex justify-between items-start mb-8 relative z-10">
-                                                             <div className="w-12 h-12 rounded-2xl bg-main/5 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
-                                                                 <Box size={20} />
-                                                             </div>
-                                                             <div className="flex items-center gap-2">
-                                                                 <Lock size={12} className="text-accent/40" />
-                                                                 <span className="text-[9px] font-black text-muted bg-white/5 border border-premium px-3 py-1.5 rounded-full uppercase tracking-widest">
-                                                                     {proj.date}
-                                                                 </span>
-                                                             </div>
-                                                        </div>
-                                                        <div className="relative z-10">
-                                                            <h3 className="font-serif text-2xl font-black text-main italic mb-2 group-hover:text-accent transition-colors">
-                                                                {proj.name}
-                                                            </h3>
-                                                            <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">
-                                                                {proj.roomType} / {proj.itemCount} Items
-                                                             </p>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-20">
-                                                <div className="w-20 h-20 rounded-[32px] bg-main/5 flex items-center justify-center text-accent/30 mx-auto mb-8 border border-premium">
-                                                    <Box size={32} />
-                                                </div>
-                                                <h3 className="font-serif text-2xl font-black text-main italic mb-4">No Active Projects</h3>
-                                                <p className="text-muted text-sm font-light mb-10 max-w-xs mx-auto">
-                                                    Start your first 3D project to see it here.
-                                                </p>
-                                                <button onClick={() => setActiveView('3d-studio')} className="btn-premium btn-premium-outline">
-                                                    <span>Open 3D Studio</span>
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </section>
-    
-                                <section className="animate-fade-in-up stagger-3">
                                     <div className="flex items-center justify-between mb-8 px-4">
                                         <div>
                                             <h2 className="font-serif text-3xl font-black text-main italic">Saved Items</h2>
@@ -679,36 +637,74 @@ const Dashboard = () => {
                                         Our 3D Room Planner is currently being updated. We are working on new tools to help you plan and see your space in high quality.
                                     </p>
                                     <div className="mt-auto space-y-8">
-                                         <div className="p-8 rounded-[40px] bg-white/5 border border-white/5">
-                                            <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                                <Sparkles size={14} className="text-accent" />
-                                                New Features Coming
-                                            </h3>
-                                            <ul className="space-y-3">
-                                                {[
-                                                    "AI-powered room checks",
-                                                    "Real-time furniture staging",
-                                                    "High-quality exports"
-                                                ].map((item, i) => (
-                                                    <li key={i} className="text-xs text-muted flex items-center gap-3">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-accent/30" />
-                                                        {item}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                         </div>
-                                         <div className="flex flex-col sm:flex-row gap-4">
-                                            <button className="flex-1 btn-premium btn-premium-gold py-5 group">
-                                                <span>Join Waitlist</span>
-                                                <ArrowUpRight size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                                            </button>
-                                            <button 
-                                                onClick={() => setActiveView('overview')}
-                                                className="px-8 py-5 rounded-[24px] border border-premium text-[10px] font-black uppercase tracking-widest text-muted hover:text-white hover:border-white/20 transition-all"
-                                            >
-                                                Back to Dashboard
-                                            </button>
-                                         </div>
+                                         {waitlistStatus.joined ? (
+                                            <div className="space-y-6">
+                                                <div className="p-8 rounded-[40px] bg-green-500/5 border border-green-500/20">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <span className="text-[10px] font-black text-green-400 uppercase tracking-[0.3em]">You're on the waitlist</span>
+                                                        <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-[9px] font-black uppercase tracking-widest border border-green-500/20">Active</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-end mb-4">
+                                                        <div>
+                                                            <p className="text-[9px] text-muted uppercase tracking-[0.2em] font-black">Position</p>
+                                                            <p className="font-serif text-3xl font-black text-white italic">{waitlistStatus.rank || '—'}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[9px] text-muted uppercase tracking-[0.2em] font-black">Progress</p>
+                                                            <p className="text-2xl font-black text-accent">{waitlistStatus.progress || 0}%</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${waitlistStatus.progress || 0}%` }} />
+                                                    </div>
+                                                </div>
+                                                {waitlistStatus.inviteCode && (
+                                                    <div className="p-6 rounded-[32px] bg-white/5 border border-white/5">
+                                                        <p className="text-[9px] text-muted uppercase tracking-[0.3em] font-black mb-3">Referral Code</p>
+                                                        <div className="flex gap-3 items-center">
+                                                            <div className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-premium font-mono text-sm text-white truncate">
+                                                                {waitlistStatus.inviteCode}
+                                                            </div>
+                                                            <button onClick={copyWaitlistCode} className="px-4 py-3 rounded-xl border border-premium text-muted hover:text-accent hover:border-accent/40 transition-all">
+                                                                {waitlistCopied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-[9px] text-muted mt-3 italic">Share to climb the waitlist and earn credits.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                         ) : (
+                                            <>
+                                                <div className="p-8 rounded-[40px] bg-white/5 border border-white/5">
+                                                    <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                                                        <Sparkles size={14} className="text-accent" />
+                                                        New Features Coming
+                                                    </h3>
+                                                    <ul className="space-y-3">
+                                                        {["AI-powered room checks", "Real-time furniture staging", "High-quality exports"].map((item, i) => (
+                                                            <li key={i} className="text-xs text-muted flex items-center gap-3">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-accent/30" />
+                                                                {item}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <button 
+                                                    onClick={handleJoinWaitlist}
+                                                    disabled={joiningWaitlist}
+                                                    className="w-full btn-premium btn-premium-gold py-5 group disabled:opacity-50"
+                                                >
+                                                    <span>{joiningWaitlist ? 'Joining...' : 'Join Waitlist'}</span>
+                                                    {!joiningWaitlist && <ArrowUpRight size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
+                                                </button>
+                                            </>
+                                         )}
+                                         <button 
+                                             onClick={() => setActiveView('overview')}
+                                             className="w-full px-8 py-5 rounded-[24px] border border-premium text-[10px] font-black uppercase tracking-widest text-muted hover:text-white hover:border-white/20 transition-all"
+                                         >
+                                             Back to Dashboard
+                                         </button>
                                     </div>
                                 </div>
                             </div>

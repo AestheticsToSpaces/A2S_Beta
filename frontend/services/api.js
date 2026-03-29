@@ -10,23 +10,35 @@ const api = axios.create({
     baseURL: API_URL,
 });
 
-// Add a request interceptor to include JWT
+// Public endpoints that don't need (and shouldn't send) auth tokens
+const PUBLIC_ROUTES = ['/users/login', '/users/register', '/gallery', '/products'];
+
 api.interceptors.request.use(
     (config) => {
         const { token } = useStore.getState();
-        
-        // We now send the token for all routes if it exists, allowing the backend
-        // to provide personalized data (like saved status) even on public routes.
-        // We only skip for login/register to be safe.
-        const authRoutes = ['/users/login', '/users/register'];
-        const isAuthRoute = authRoutes.some(route => config.url && config.url.startsWith(route));
+        const isPublic = PUBLIC_ROUTES.some(route => config.url && config.url.startsWith(route));
 
-        if (token && !isAuthRoute) {
+        if (token && !isPublic) {
             config.headers.Authorization = `Bearer ${token.trim()}`;
         }
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+// Clear stale tokens when backend rejects them
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            const url = error.config?.url || '';
+            const isPublic = PUBLIC_ROUTES.some(route => url.startsWith(route));
+            if (!isPublic) {
+                useStore.getState().logout();
+            }
+        }
+        return Promise.reject(error);
+    }
 );
 
 // ============================================
