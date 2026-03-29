@@ -154,9 +154,9 @@ def _load_scraped_data() -> pd.DataFrame:
 
 
 # ──────────────────────────────────────────────
-# Main loader — PostgreSQL (Neon free tier)
+# Main loader — Azure SQL Server
 # ──────────────────────────────────────────────
-import psycopg2
+import pymssql
 import pandas as pd
 import os
 from dotenv import load_dotenv
@@ -165,29 +165,27 @@ from pathlib import Path
 env_path = Path(__file__).parent.parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
-# Neon PostgreSQL — set DATABASE_URL or individual vars in .env / hosting env
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
-DB_HOST = os.environ.get("DB_HOST", "")
-DB_NAME = os.environ.get("DB_NAME", "")
-DB_USER = os.environ.get("DB_USER", "")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
+SERVER = os.environ.get("SERVER", "")
+DATABASE = os.environ.get("DATABASE", "")
+USERNAME = os.environ.get("DB_USERNAME", "")
+PASSWORD = os.environ.get("DB_PASSWORD", "")
 
 
 def get_connection():
-    if DATABASE_URL:
-        return psycopg2.connect(DATABASE_URL, sslmode="require")
-    if DB_HOST and DB_NAME and DB_USER:
-        return psycopg2.connect(
-            host=DB_HOST, dbname=DB_NAME,
-            user=DB_USER, password=DB_PASSWORD,
-            sslmode="require",
+    if not all([SERVER, DATABASE, USERNAME, PASSWORD]):
+        raise RuntimeError(
+            "Missing Azure SQL credentials. "
+            "Set SERVER, DATABASE, DB_USERNAME, DB_PASSWORD in .env or environment."
         )
-    raise RuntimeError("No database credentials configured. Set DATABASE_URL or DB_HOST/DB_NAME/DB_USER/DB_PASSWORD.")
+    return pymssql.connect(
+        server=SERVER, user=USERNAME,
+        password=PASSWORD, database=DATABASE,
+    )
 
 
 def load_product_catalog() -> pd.DataFrame:
     """
-    Fetch the product catalog from PostgreSQL (Neon).
+    Fetch the product catalog from Azure SQL Server.
     Falls back to mock data if connection fails.
     """
     try:

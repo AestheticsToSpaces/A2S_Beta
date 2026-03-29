@@ -118,15 +118,15 @@ az containerapp create `
     --cpu 0.5 --memory 1.0Gi `
     --env-vars `
         "DB_URL=$DB_URL" `
-        "DB_USER=$($envVars['USERNAME'])" `
-        "DB_PASSWORD=$($envVars['PASSWORD'])" `
+        "DB_USER=$($envVars['DB_USERNAME'])" `
+        "DB_PASSWORD=$($envVars['DB_PASSWORD'])" `
         "DB_DRIVER=com.microsoft.sqlserver.jdbc.SQLServerDriver" `
         "DB_DIALECT=org.hibernate.dialect.SQLServerDialect" `
         "H2_CONSOLE=false" `
         "JWT_SECRET=$($envVars['JWT_SECRET'])" `
         "SUPABASE_URL=$($envVars['SUPABASE_URL'])" `
         "SUPABASE_ANON_KEY=$($envVars['SUPABASE_ANON_KEY'])" `
-        "CORS_ALLOWED_ORIGINS=https://$FRONTEND_APP.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io,http://localhost:3000" `
+        "CORS_ORIGINS=https://$FRONTEND_APP.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io,http://localhost:3000" `
         "LLM_SERVICE_URL=http://$LLM_APP"
 
 # Get backend internal FQDN
@@ -157,8 +157,8 @@ az containerapp create `
         "GROQ_API_KEY=$($envVars['GROQ_API_KEY'])" `
         "SERVER=$($envVars['SERVER'])" `
         "DATABASE=$($envVars['DATABASE'])" `
-        "USERNAME=$($envVars['USERNAME'])" `
-        "PASSWORD=$($envVars['PASSWORD'])" `
+        "DB_USERNAME=$($envVars['DB_USERNAME'])" `
+        "DB_PASSWORD=$($envVars['DB_PASSWORD'])" `
         "PORT=5001"
 
 Write-Host "  ✓ LLM service deployed (internal only)" -ForegroundColor Green
