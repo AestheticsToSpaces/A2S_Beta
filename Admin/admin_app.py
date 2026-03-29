@@ -9,9 +9,9 @@ import time
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # --- CONFIGURATION ---
-BACKEND_URL = os.environ.get("VITE_API_URL", "http://localhost:8080")
+BACKEND_URL = os.environ.get("BACKEND_URL") or os.environ.get("VITE_API_URL", "http://localhost:8080")
 if not BACKEND_URL or BACKEND_URL.startswith("/"):
-    BACKEND_URL = "http://localhost:8080" # Fallback for local dev
+    BACKEND_URL = "http://localhost:8080"
 
 # API ENDPOINTS
 STATS_API = f"{BACKEND_URL}/api/admin/stats"

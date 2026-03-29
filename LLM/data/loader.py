@@ -154,41 +154,44 @@ def _load_scraped_data() -> pd.DataFrame:
 
 
 # ──────────────────────────────────────────────
-# Main loader
+# Main loader — PostgreSQL (Neon free tier)
 # ──────────────────────────────────────────────
-import pymssql
+import psycopg2
 import pandas as pd
 import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-# Load credentials from .env in the root folder
 env_path = Path(__file__).parent.parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
-# ===== Azure SQL Connection Details =====
-SERVER = os.environ.get("SERVER", "a2s-sql-server.database.windows.net")
-DATABASE = os.environ.get("DATABASE", "free-sql-db-6076523")
-USERNAME = os.environ.get("USERNAME", "sqladmin")
-PASSWORD = os.environ.get("PASSWORD", "A2S@2026")
+# Neon PostgreSQL — set DATABASE_URL or individual vars in .env / hosting env
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+DB_HOST = os.environ.get("DB_HOST", "")
+DB_NAME = os.environ.get("DB_NAME", "")
+DB_USER = os.environ.get("DB_USER", "")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
+
 
 def get_connection():
-    return pymssql.connect(
-        server=SERVER,
-        user=USERNAME,
-        password=PASSWORD,
-        database=DATABASE
-    )
+    if DATABASE_URL:
+        return psycopg2.connect(DATABASE_URL, sslmode="require")
+    if DB_HOST and DB_NAME and DB_USER:
+        return psycopg2.connect(
+            host=DB_HOST, dbname=DB_NAME,
+            user=DB_USER, password=DB_PASSWORD,
+            sslmode="require",
+        )
+    raise RuntimeError("No database credentials configured. Set DATABASE_URL or DB_HOST/DB_NAME/DB_USER/DB_PASSWORD.")
 
-# @st.cache_data(ttl=3600, show_spinner="Fetching catalog from Azure SQL...")
+
 def load_product_catalog() -> pd.DataFrame:
     """
-    Fetch the product catalog directly from Azure SQL Database.
-    Replaces the legacy Excel-based loading.
+    Fetch the product catalog from PostgreSQL (Neon).
+    Falls back to mock data if connection fails.
     """
     try:
         conn = get_connection()
-        # Query products and join with designs if needed, though catalog usually wants flat products
         query = """
             SELECT 
                 p.id as product_id, p.name as product_name, p.brand, p.category as product_type,

@@ -8,6 +8,6 @@ lxml>=5.0.0
 flask
 flask-cors
 python-dotenv
-pymssql
+psycopg2-binary
 sqlalchemy
 groq
