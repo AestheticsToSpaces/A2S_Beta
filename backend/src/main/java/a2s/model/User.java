@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
@@ -63,5 +64,18 @@ public class User {
     private String providerId;
 
     private Integer consultantCredits = 5;
-    private Integer vastuCredits = 2;
+    private Integer vastuCredits = 3;
+    private LocalDate creditsResetDate;
+
+    public static final int DAILY_CONSULTANT_CREDITS = 5;
+    public static final int DAILY_VASTU_CREDITS = 3;
+
+    public void resetCreditsIfNewDay() {
+        LocalDate today = LocalDate.now();
+        if (creditsResetDate == null || creditsResetDate.isBefore(today)) {
+            consultantCredits = DAILY_CONSULTANT_CREDITS;
+            vastuCredits = DAILY_VASTU_CREDITS;
+            creditsResetDate = today;
+        }
+    }
 }

@@ -15,7 +15,7 @@ export const useStore = create(
           token, 
           isAuthenticated: !!token,
           consultantCredits: user.consultantCredits ?? 5,
-          vastuCredits: user.vastuCredits ?? 2,
+          vastuCredits: user.vastuCredits ?? 3,
           styleDNA: user.styleDNA || null,
           savedDesigns: user.savedDesigns || [],
           savedProducts: user.watchlist || []
@@ -31,7 +31,7 @@ export const useStore = create(
 
       // --- Profile Slice ---
       consultantCredits: 5,
-      vastuCredits: 2,
+      vastuCredits: 3,
       styleDNA: null,
       savedDesigns: [],
       savedProducts: [],

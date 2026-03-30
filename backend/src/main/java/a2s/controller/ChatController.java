@@ -37,18 +37,17 @@ public class ChatController {
     @PostMapping
     @SuppressWarnings("null")
     public ResponseEntity<?> chat(@RequestBody Map<String, Object> request) {
-        // Main chat endpoint (used by AIStylistWidget for general queries)
-        // Check credits for general chat as well
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
             String email = auth.getName();
             Optional<User> userOpt = userRepository.findByEmail(email);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
+                user.resetCreditsIfNewDay();
                 if (user.getConsultantCredits() <= 0) {
                     Map<String, Object> errorBody = new HashMap<>();
                     errorBody.put("error", true);
-                    errorBody.put("message", "You have exhausted your AI Consultant credits. Refer friends to earn more!");
+                    errorBody.put("message", "You've used all 5 AI Consultant credits for today. They reset tomorrow!");
                     errorBody.put("status", 403);
                     return ResponseEntity.status(403).body(errorBody);
                 }
@@ -87,10 +86,11 @@ public class ChatController {
             Optional<User> userOpt = userRepository.findByEmail(email);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
+                user.resetCreditsIfNewDay();
                 if (user.getConsultantCredits() <= 0) {
                     Map<String, Object> errorBody = new HashMap<>();
                     errorBody.put("error", true);
-                    errorBody.put("message", "You have exhausted your AI Consultant credits. Refer friends to earn more!");
+                    errorBody.put("message", "You've used all 5 AI Consultant credits for today. They reset tomorrow!");
                     errorBody.put("status", 403);
                     return ResponseEntity.status(403).body(errorBody);
                 }
@@ -136,10 +136,11 @@ public class ChatController {
             Optional<User> userOpt = userRepository.findByEmail(email);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
+                user.resetCreditsIfNewDay();
                 if (user.getVastuCredits() <= 0) {
                     Map<String, Object> errorBody = new HashMap<>();
                     errorBody.put("error", true);
-                    errorBody.put("message", "You have exhausted your Vastu Audit credits. These are fixed per member.");
+                    errorBody.put("message", "You've used all 3 Vastu Audit credits for today. They reset tomorrow!");
                     errorBody.put("status", 403);
                     return ResponseEntity.status(403).body(errorBody);
                 }
