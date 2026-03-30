@@ -122,8 +122,9 @@ public class WebSecurityConfig {
                         .successHandler(oAuth2AuthenticationSuccessHandler))
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.sameOrigin())
+                        .cacheControl(cache -> cache.disable())
                         .contentTypeOptions(cto -> {
-                        }) // X-Content-Type-Options: nosniff
+                        })
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
                                 .maxAgeInSeconds(31536000)));
