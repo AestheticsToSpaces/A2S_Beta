@@ -9,9 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -20,15 +18,14 @@ public class DataInitializer {
     @Bean
     @SuppressWarnings("null")
     CommandLineRunner initDatabase(DesignRepository designRepo, ProductRepository productRepo,
-                                   UserRepository userRepo, PasswordEncoder encoder, Environment env) {
+                                   UserRepository userRepo, PasswordEncoder encoder) {
         return args -> {
-            String dbUrl = env.getProperty("spring.datasource.url", "");
-            if (dbUrl.contains("h2:mem") && designRepo.count() == 0) {
-                System.out.println("[DB] H2 detected — seeding sample data for local dev...");
+            if (designRepo.count() == 0) {
+                System.out.println("[DB] Empty database detected — seeding sample data...");
                 seedSampleData(designRepo, productRepo);
                 System.out.println("[DB] Seeded " + designRepo.count() + " designs, " + productRepo.count() + " products.");
             } else {
-                System.out.println("[DB] Using live database. Designs: " + designRepo.count());
+                System.out.println("[DB] Database has " + designRepo.count() + " designs, " + productRepo.count() + " products.");
             }
         };
     }

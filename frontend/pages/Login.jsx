@@ -371,6 +371,31 @@ const Login = () => {
                                  {!loading && <ArrowRight size={18} />}
                              </button>
 
+                             {/* OAuth Divider */}
+                             <div className="flex items-center gap-4 mt-8">
+                                 <div className="flex-1 h-px bg-premium" />
+                                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">Or continue with</span>
+                                 <div className="flex-1 h-px bg-premium" />
+                             </div>
+
+                             {/* OAuth Buttons */}
+                             <div className="flex gap-4 mt-6">
+                                 <button
+                                     type="button"
+                                     onClick={handleGoogleLogin}
+                                     className="flex-1 flex items-center justify-center gap-3 py-4 rounded-xl border border-premium bg-offset text-main text-sm font-bold uppercase tracking-wider transition-all duration-300 hover:border-accent/30 hover:shadow-md active:scale-95"
+                                 >
+                                     <Chrome size={18} /> Google
+                                 </button>
+                                 <button
+                                     type="button"
+                                     onClick={handleAppleLogin}
+                                     className="flex-1 flex items-center justify-center gap-3 py-4 rounded-xl border border-premium bg-offset text-main text-sm font-bold uppercase tracking-wider transition-all duration-300 hover:border-accent/30 hover:shadow-md active:scale-95"
+                                 >
+                                     <Apple size={18} /> Apple
+                                 </button>
+                             </div>
+
                             </form>
                         </div>
 

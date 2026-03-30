@@ -44,7 +44,19 @@ jobs:
           az containerapp update \
             --name a2s-backend \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_LOGIN_SERVER }}/a2s-backend:latest
+            --image ${{ env.ACR_LOGIN_SERVER }}/a2s-backend:latest \
+            --set-env-vars \
+              DB_URL="${{ secrets.DB_URL }}" \
+              DB_USER="${{ secrets.DB_USER }}" \
+              DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              DB_DRIVER="org.postgresql.Driver" \
+              DB_DIALECT="org.hibernate.dialect.PostgreSQLDialect" \
+              JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              JWT_EXPIRATION="86400000" \
+              CORS_ORIGINS="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
+              LLM_SERVICE_URL="https://a2s-llm.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
+              GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
+              GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
 
       - name: Deploy LLM
         run: |
