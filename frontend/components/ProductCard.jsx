@@ -1,3 +1,4 @@
+import React, { useRef, useState } from 'react';
 import { IndianRupee, Sparkles, Eye, Heart } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { toggleWatchlist as toggleWatchlistApi } from '../services/api';

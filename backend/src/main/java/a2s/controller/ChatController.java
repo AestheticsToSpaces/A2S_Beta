@@ -24,11 +24,13 @@ import org.springframework.core.io.ByteArrayResource;
 
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class ChatController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @org.springframework.beans.factory.annotation.Value("${LLM_SERVICE_URL:http://localhost:5001}")
+    private String llmServiceUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -55,11 +57,7 @@ public class ChatController {
             }
         }
 
-        String llmBaseUrl = System.getenv("LLM_SERVICE_URL");
-        if (llmBaseUrl == null || llmBaseUrl.isEmpty()) {
-            llmBaseUrl = "http://localhost:5001";
-        }
-        String url = llmBaseUrl + "/api/chat";
+        String url = llmServiceUrl + "/api/chat";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -101,11 +99,7 @@ public class ChatController {
             }
         }
 
-        String llmBaseUrl = System.getenv("LLM_SERVICE_URL");
-        if (llmBaseUrl == null || llmBaseUrl.isEmpty()) {
-            llmBaseUrl = "http://localhost:5001";
-        }
-        String url = llmBaseUrl + "/api/chat";
+        String url = llmServiceUrl + "/api/chat";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -154,11 +148,7 @@ public class ChatController {
             }
         }
 
-        String llmBaseUrl = System.getenv("LLM_SERVICE_URL");
-        if (llmBaseUrl == null || llmBaseUrl.isEmpty()) {
-            llmBaseUrl = "http://localhost:5001";
-        }
-        String url = llmBaseUrl + "/api/vastu";
+        String url = llmServiceUrl + "/api/vastu";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -195,7 +185,7 @@ public class ChatController {
         } catch (Exception e) {
             Map<String, Object> errorBody = new HashMap<>();
             errorBody.put("error", true);
-            errorBody.put("message", "Vastu audit service is currently unavailable. Please try again later. " + e.getMessage());
+            errorBody.put("message", "Vastu audit service is currently unavailable. Please try again later.");
             errorBody.put("status", 503);
             return ResponseEntity.status(503).body(errorBody);
         }

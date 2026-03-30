@@ -97,7 +97,19 @@ const DesignDetail = () => {
         );
     }
 
-    if (!design) return null;
+    if (!design) {
+        return (
+            <div className="min-h-screen bg-main pt-24 flex items-center justify-center transition-all duration-1000 px-6">
+                <div className="flex flex-col items-center gap-8 text-center max-w-md">
+                    <p className="font-serif text-2xl font-black text-main italic">We couldn&apos;t load this design.</p>
+                    <p className="text-muted text-sm font-light">It may have been removed or the link is invalid.</p>
+                    <Link to="/gallery" className="btn-premium btn-premium-gold">
+                        <span>Back to Gallery</span>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-main transition-all duration-1000 relative overflow-hidden">
@@ -210,7 +222,7 @@ const DesignDetail = () => {
 
                         {/* Categorized Products */}
                         {Object.entries(
-                            design.products.reduce((acc, p) => {
+                            (design.products || []).reduce((acc, p) => {
                                 const cat = p.category || 'Essential';
                                 if (!acc[cat]) acc[cat] = [];
                                 acc[cat].push(p);

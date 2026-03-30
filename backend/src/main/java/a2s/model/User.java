@@ -29,7 +29,9 @@ public class User {
     @JsonIgnore
     private String password;
 
+    @JsonIgnore
     private String resetPasswordToken;
+    @JsonIgnore
     private LocalDateTime resetPasswordExpiry;
 
     private String location;

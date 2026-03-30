@@ -11,19 +11,13 @@ import ToastContainer from './ToastContainer';
 import { getProductShopUrl } from '../utils/productLinks';
 
 const ProductDetailModal = ({ product, onClose }) => {
-    if (!product) return null;
-
-    const imageUrl = product.image_url || product.image || 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=800';
-    const gallery = product.gallery || [imageUrl];
-    const linkUrl = getProductShopUrl(product);
-    
     const { toasts, removeToast, toast } = useToast();
     
     const [isSaved, setIsSaved] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
 
-    // Check if item is already saved
     useEffect(() => {
+        if (!product) return;
         const checkSavedStatus = async () => {
             try {
                 const token = localStorage.getItem('token');
@@ -38,7 +32,21 @@ const ProductDetailModal = ({ product, onClose }) => {
             }
         };
         checkSavedStatus();
-    }, [product.id]);
+    }, [product?.id]);
+
+    useEffect(() => {
+        if (!product) return;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [product]);
+
+    if (!product) return null;
+
+    const imageUrl = product.image_url || product.image || 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=800';
+    const gallery = product.gallery || [imageUrl];
+    const linkUrl = getProductShopUrl(product);
 
     const handleToggleSave = async () => {
         try {
@@ -60,14 +68,6 @@ const ProductDetailModal = ({ product, onClose }) => {
             setIsSaving(false);
         }
     };
-
-    // Lock scroll when open
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
 
     return (
         <div className="fixed top-16 md:top-[72px] inset-x-0 bottom-0 z-50 flex flex-col bg-white animate-fade-in overflow-hidden">

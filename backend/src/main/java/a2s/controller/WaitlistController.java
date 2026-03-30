@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/waitlist")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class WaitlistController {
 
     @Autowired

@@ -274,7 +274,7 @@ const Dashboard = () => {
                                 <span className="text-[10px] font-black text-accent uppercase tracking-[0.5em]">Dashboard</span>
                             </div>
                             <h1 className="font-serif text-5xl md:text-7xl font-black text-main leading-[0.95] tracking-tighter mb-6">
-                                Hello, <span className="text-gradient-gold italic">{user.name.split(' ')[0]}</span>
+                                Hello, <span className="text-gradient-gold italic">{(user?.name || '').trim().split(/\s+/)[0] || 'there'}</span>
                             </h1>
                             <p className="text-muted text-lg font-light max-w-xl leading-relaxed">
                                 Welcome to your personal dashboard. Here you can see your saved designs and 3D projects.
@@ -475,7 +475,7 @@ const Dashboard = () => {
                                                             <span className="text-[10px] font-black uppercase tracking-widest">Refine Your Style</span>
                                                         </button>
                                                         <button 
-                                                            onClick={() => setActiveView('interior')}
+                                                            onClick={() => navigate('/gallery')}
                                                             className="btn-premium btn-premium-outline px-6 py-3 group flex items-center gap-2"
                                                         >
                                                             <Compass size={14} className="text-accent group-hover:rotate-45 transition-transform" />

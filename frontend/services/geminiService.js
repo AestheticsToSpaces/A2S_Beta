@@ -36,10 +36,13 @@ class GeminiService {
 
     async performVastuAudit(roomType, layoutDescription) {
         try {
+            const formData = new FormData();
+            formData.append('roomType', roomType);
+            formData.append('description', layoutDescription);
+
             const response = await fetch('/api/chat/vastu', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomType, description: layoutDescription })
+                body: formData,
             });
 
             if (!response.ok) {

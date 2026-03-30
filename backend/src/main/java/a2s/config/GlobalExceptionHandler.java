@@ -1,5 +1,7 @@
 package a2s.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,12 +12,10 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Global exception handler that converts all exceptions into a
- * consistent JSON error response format.
- */
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
@@ -33,24 +33,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
     public ResponseEntity<Map<String, Object>> handleAuthenticationException(org.springframework.security.core.AuthenticationException ex) {
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Error: Unauthorized - " + ex.getMessage());
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Authentication required.");
     }
 
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
-        return buildErrorResponse(HttpStatus.FORBIDDEN, "Error: Forbidden - " + ex.getMessage());
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "Access denied.");
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+        log.error("Unhandled runtime exception", ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An internal error occurred. Please try again later.");
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        ex.printStackTrace(); // Log for visibility
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+        log.error("Unhandled exception", ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again later.");
     }
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {

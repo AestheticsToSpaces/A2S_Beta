@@ -72,7 +72,7 @@ const AIStylistWidget = () => {
     }, [messages, isLoading]);
 
     const handleSend = async () => {
-        if (!input.trim() || isLoading || credits.consultant <= 0) return;
+        if (!input.trim() || isLoading || consultantCredits <= 0) return;
         
         const userText = input.trim();
         const userMsg = { id: Date.now().toString(), role: 'user', text: userText };

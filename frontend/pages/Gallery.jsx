@@ -64,23 +64,24 @@ const Gallery = () => {
 
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-                const [designsData, productsData] = await Promise.all([getDesigns(), getProducts()]);
-                setDesigns(designsData);
-                setStandaloneProducts(productsData);
-            } catch (err) {
-                console.error('Failed to fetch gallery data:', err);
-                setError('Unable to load items. Please check your connection.');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
+    const fetchData = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const [designsData, productsData] = await Promise.all([getDesigns(), getProducts()]);
+            setDesigns(designsData);
+            setStandaloneProducts(productsData);
+        } catch (err) {
+            console.error('Failed to fetch gallery data:', err);
+            setError('Unable to load items. Please check your connection.');
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const furnitureItems = useMemo(() => {
         const products = [...standaloneProducts];

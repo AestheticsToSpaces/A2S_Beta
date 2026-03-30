@@ -7,7 +7,6 @@ with small thumbnails, prices, dimensions, and affiliate links.
 
 from __future__ import annotations
 
-import streamlit as st
 import pandas as pd
 
 
@@ -16,6 +15,8 @@ def display_product_cards(products: list[dict]) -> None:
     Render product cards in a 3-column compact grid.
     Each card has a small thumbnail, name, price, source badge, and buy link.
     """
+    import streamlit as st
+
     if not products:
         st.info("No products to display.")
         return
@@ -28,10 +29,10 @@ def display_product_cards(products: list[dict]) -> None:
                 break
             product = products[idx]
             with col:
-                _render_card(product)
+                _render_card(product, st)
 
 
-def _render_card(product: dict) -> None:
+def _render_card(product: dict, st) -> None:
     """Render a single compact product card."""
     with st.container(border=True):
         # ── Image (small thumbnail) ──

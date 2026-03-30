@@ -13,6 +13,7 @@ def sanitize_nans(obj):
     return obj
 
 app = Flask(__name__)
+CORS(app)
 import sys
 import os
 from dotenv import load_dotenv
@@ -50,24 +51,27 @@ def ping():
 @app.route('/api/chat', methods=['POST'])
 @app.route('/api/chat/consultant', methods=['POST'])
 def chat():
-    data = request.json
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
     message = data.get('message')
-    print(f"[CHAT] Received message: {message[:50]}...")
     if not message:
         return jsonify({"error": "No message provided"}), 400
-    
+    print(f"[CHAT] Received message: {str(message)[:50]}...")
     try:
         response = process_message(message, get_catalog())
         return jsonify(sanitize_nans(response))
     except Exception as e:
         print(f"[CHAT] Error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500
 
 @app.route('/api/vastu', methods=['POST'])
 def vastu():
     # Handle both JSON and Multipart/Form-Data
     if request.is_json:
-        data = request.json
+        data = request.get_json(silent=True)
+        if data is None:
+            return jsonify({"error": "Invalid or missing JSON body"}), 400
         room_type = data.get('roomType')
         description = data.get('description')
         image_data = None
@@ -95,7 +99,7 @@ def vastu():
         return jsonify(sanitize_nans(response))
     except Exception as e:
         print(f"[VASTU] Error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))

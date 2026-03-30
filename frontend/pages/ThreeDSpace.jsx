@@ -245,9 +245,15 @@ const ThreeDSpace = () => {
             return `Wall Item: ${catItem.name} on ${item.surface.replace('wall-', '').toUpperCase()} wall.`;
         }).filter(Boolean);
 
-        const result = await geminiService.performVastuAudit(roomType, descriptions.join(" "));
-        setVastuResult(result);
-        setIsAnalyzing(false);
+        try {
+            const result = await geminiService.performVastuAudit(roomType, descriptions.join(" "));
+            setVastuResult(result);
+        } catch (err) {
+            console.error('Vastu audit failed:', err);
+            toast.error(err?.message || 'Failed to perform Vastu audit');
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const renderItem = (item, isInteractive) => {
