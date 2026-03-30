@@ -14,7 +14,7 @@ import SkeletonCard from '../components/SkeletonCard';
 import ProductDetailModal from '../components/ProductDetailModal';
 import { INITIAL_FILTER_STATE } from '../constants';
 import { getInitialFiltersFromOnboarding } from '../utils/storage';
-import { getDesigns, getProducts } from '../services/api';
+import { getDesigns, getProducts, getDesignsCached, getProductsCached } from '../services/api';
 import { openProductInNewTab } from '../utils/productLinks';
 
 // Animated counter hook
@@ -66,14 +66,27 @@ const Gallery = () => {
 
     const fetchData = useCallback(async () => {
         try {
-            setIsLoading(true);
+            const cachedDesigns = getDesignsCached();
+            const cachedProducts = getProductsCached();
+            const hasCache = cachedDesigns?.length > 0 || cachedProducts?.length > 0;
+
+            if (hasCache) {
+                setDesigns(cachedDesigns || []);
+                setStandaloneProducts(cachedProducts || []);
+                setIsLoading(false);
+            } else {
+                setIsLoading(true);
+            }
             setError(null);
+
             const [designsData, productsData] = await Promise.all([getDesigns(), getProducts()]);
             setDesigns(designsData);
             setStandaloneProducts(productsData);
         } catch (err) {
             console.error('Failed to fetch gallery data:', err);
-            setError('Unable to load items. Please check your connection.');
+            if (!designs.length && !standaloneProducts.length) {
+                setError('Unable to load items. Please check your connection.');
+            }
         } finally {
             setIsLoading(false);
         }

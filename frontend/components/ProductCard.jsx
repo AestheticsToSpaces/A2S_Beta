@@ -63,6 +63,8 @@ const ProductCard = ({ product }) => {
                 <img
                     src={imageUrl}
                     alt={product.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-110"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=400'; }}
                 />

@@ -3,11 +3,14 @@ package a2s.controller;
 import a2s.model.Design;
 import a2s.repository.DesignRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/gallery")
@@ -17,8 +20,12 @@ public class DesignController {
     DesignRepository designRepository;
 
     @GetMapping
-    public List<Design> getAllDesigns() {
-        return designRepository.findAll();
+    @Cacheable("designs")
+    public ResponseEntity<List<Design>> getAllDesigns() {
+        List<Design> designs = designRepository.findAllBy();
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(2, TimeUnit.MINUTES).staleWhileRevalidate(5, TimeUnit.MINUTES))
+                .body(designs);
     }
 
     @GetMapping("/{id}")

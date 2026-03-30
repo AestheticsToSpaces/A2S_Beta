@@ -64,6 +64,8 @@ const DesignCard = ({ design, onQuickPreview }) => {
                 <img
                     src={design.image}
                     alt={design.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
                 />
 

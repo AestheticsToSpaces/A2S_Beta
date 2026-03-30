@@ -151,25 +151,51 @@ export const toggleWatchlist = async (productId) => {
 // DESIGNS
 // ============================================
 
+const GALLERY_CACHE_KEY = 'a2s_gallery_cache';
+const PRODUCTS_CACHE_KEY = 'a2s_products_cache';
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+function readCache(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts > CACHE_TTL_MS) return null;
+        return data;
+    } catch { return null; }
+}
+
+function writeCache(key, data) {
+    try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* quota */ }
+}
+
 export const getDesigns = async () => {
     try {
         const response = await api.get('/gallery');
-        return response.data || [];
+        const data = response.data || [];
+        writeCache(GALLERY_CACHE_KEY, data);
+        return data;
     } catch (error) {
         console.error('Error fetching designs:', error);
         throw error;
     }
 };
 
+export const getDesignsCached = () => readCache(GALLERY_CACHE_KEY);
+
 export const getProducts = async () => {
     try {
         const response = await api.get('/products');
-        return response.data || [];
+        const data = response.data || [];
+        writeCache(PRODUCTS_CACHE_KEY, data);
+        return data;
     } catch (error) {
         console.error('Error fetching products:', error);
         throw error;
     }
 };
+
+export const getProductsCached = () => readCache(PRODUCTS_CACHE_KEY);
 
 export const getDesignById = async (id) => {
     try {
