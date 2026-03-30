@@ -23,6 +23,10 @@ public class WaitlistController {
     @SuppressWarnings("null")
     public ResponseEntity<?> getWaitlistStatus() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Please log in to view waitlist status"));
+        }
         String email = authentication.getName();
         
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -62,6 +66,10 @@ public class WaitlistController {
     @SuppressWarnings("null")
     public ResponseEntity<?> joinWaitlist() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Please log in to join the waitlist"));
+        }
         String email = authentication.getName();
         
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -72,11 +80,9 @@ public class WaitlistController {
                 user.setWaitlistJoinedAt(LocalDateTime.now());
                 userRepository.save(user);
             }
-            return ResponseEntity.ok(new HashMap<String, String>() {{
-                put("message", "Successfully joined Phase 2 waitlist");
-            }});
+            return ResponseEntity.ok(Map.of("message", "Successfully joined Phase 2 waitlist"));
         }
         
-        return ResponseEntity.badRequest().body("User not found");
+        return ResponseEntity.badRequest().body(Map.of("message", "User not found. Please log in again."));
     }
 }

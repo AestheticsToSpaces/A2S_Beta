@@ -150,9 +150,10 @@ const Dashboard = () => {
             await joinPhase2Waitlist();
             const data = await getWaitlistStatus();
             setWaitlistStatus(data);
-            toast.success("You're on the waitlist!");
+            toast.success("You're on the waitlist! Check your position below.");
         } catch (err) {
-            toast.error(typeof err === 'string' ? err : 'Failed to join waitlist');
+            const msg = typeof err === 'string' ? err : 'Failed to join waitlist. Please try logging out and back in.';
+            toast.error(msg);
         } finally {
             setJoiningWaitlist(false);
         }

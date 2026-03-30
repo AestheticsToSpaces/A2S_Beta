@@ -112,7 +112,6 @@ public class WebSecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/api/products/*", "GET")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/newsletter/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/subscribers/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/waitlist/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/favicon.ico")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/login/oauth2/code/**")).permitAll()
