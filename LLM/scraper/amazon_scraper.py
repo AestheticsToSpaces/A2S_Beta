@@ -16,7 +16,7 @@ from typing import Optional
 
 from bs4 import BeautifulSoup
 
-from scraper.base import get_session, get_headers, fetch_page, clean_price, clean_text, logger
+from scraper.base import get_session, get_headers, fetch_page, clean_price, clean_text, logger, extract_color, extract_material, map_aesthetic_style, build_affiliate_url
 
 # ──────────────────────────────────────────────
 # Amazon India search URLs
@@ -125,6 +125,11 @@ def _parse_amazon_results(html: str, product_type: str) -> list[dict]:
                 parts = [g for g in dim_match.groups() if g]
                 dimensions = " x ".join(parts) + " cm"
 
+            # Extract color and material
+            color_name, color_hex = extract_color(name)
+            material = extract_material(name)
+            aesthetic_style = map_aesthetic_style(product_type, name, "")
+
             products.append({
                 "product_id": f"AMZ_{asin}",
                 "product_name": name,
@@ -133,9 +138,13 @@ def _parse_amazon_results(html: str, product_type: str) -> list[dict]:
                 "price_currency": "INR",
                 "product_type": product_type,
                 "image_url": image_url,
-                "affiliate_url": product_url,
+                "affiliate_url": build_affiliate_url(product_url, "amazon.in"),
                 "source_url": product_url,
                 "dimensions": dimensions,
+                "color": color_name,
+                "color_hex": color_hex,
+                "material": material,
+                "aesthetic_style": aesthetic_style,
                 "rating": rating,
                 "source": "amazon.in",
             })
@@ -147,7 +156,7 @@ def _parse_amazon_results(html: str, product_type: str) -> list[dict]:
     return products
 
 
-def scrape_amazon(max_per_category: int = 100) -> list[dict]:
+def scrape_amazon(max_per_category: int = 200) -> list[dict]:
     """
     Scrape products from Amazon India with pagination.
 

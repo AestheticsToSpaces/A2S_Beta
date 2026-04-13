@@ -39,7 +39,7 @@ public class DataInitializer {
              "https://www.ikea.com/in/en/images/products/landskrona-2-seat-sofa-gunnared-dark-grey-wood__0602101_pe680170_s5.jpg",
              "https://www.ikea.com/in/en/p/landskrona-2-seat-sofa-gunnared-dark-grey-wood-s29270280/"},
             {"BRIMNES Day-bed", "IKEA", "bed", "33470", "neutral", "bedroom", "functional",
-             "https://www.ikea.com/in/en/images/products/brimnes-day-bed-w-2-drawers-2-mattresses-white-afjall-firm__1101878_pe867187_s5.jpg",
+             "https://www.ikea.com/in/en/images/products/brimnes-day-bed-w-2-drawers-2-mattresses-white__1101878_pe867187_s5.jpg",
              "https://www.ikea.com/in/en/p/brimnes-day-bed-w-2-drawers-2-mattresses-white-00521288/"},
             {"KALLAX Shelf unit", "IKEA", "storage", "12990", "neutral", "study", "minimal",
              "https://www.ikea.com/in/en/images/products/kallax-shelf-unit-white__0644757_pe702939_s5.jpg",

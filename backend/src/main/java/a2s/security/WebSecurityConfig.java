@@ -110,6 +110,8 @@ public class WebSecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/api/gallery/*", "GET")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/products", "GET")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/products/*", "GET")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/products/**", "GET")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/products/import", "POST")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/newsletter/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/subscribers/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()

@@ -6,7 +6,9 @@ rate limiting, and data normalization.
 import time
 import random
 import logging
+import os
 from typing import Optional
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -45,7 +47,7 @@ def get_headers() -> dict:
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8,hi;q=0.7",
-        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Encoding": "gzip, deflate",
         "DNT": "1",
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
@@ -101,8 +103,189 @@ def clean_price(text: str) -> Optional[float]:
 
 
 def clean_text(text: str) -> str:
-    """Strip and normalize whitespace in text."""
+    """Remove extra whitespace and clean text."""
     if not text:
         return ""
     import re
-    return re.sub(r"\s+", " ", str(text)).strip()
+    text = str(text).strip()
+    text = re.sub(r"\s+", " ", text)
+    return text
+
+
+def build_affiliate_url(source_url: str, source: str) -> str:
+    """
+    Build an affiliate URL from a source URL.
+
+    This only becomes revenue-generating when valid affiliate account IDs
+    are configured via environment variables.
+
+    Supported env vars:
+    - AMAZON_ASSOCIATE_TAG
+    - FLIPKART_AFFILIATE_ID
+    - IKEA_AFFILIATE_CODE
+    - PEPPERFRY_AFFILIATE_ID
+    - URBANLADDER_AFFILIATE_ID
+    - WOODENSTREET_AFFILIATE_ID
+    """
+    if not source_url:
+        return ""
+
+    src = (source or "").lower().strip()
+
+    try:
+        parsed = urlparse(source_url)
+        query = parse_qs(parsed.query)
+
+        if "amazon" in src:
+            tag = os.getenv("AMAZON_ASSOCIATE_TAG", "").strip()
+            if tag:
+                query["tag"] = [tag]
+
+        elif "flipkart" in src:
+            aff = os.getenv("FLIPKART_AFFILIATE_ID", "").strip()
+            if aff:
+                query["affid"] = [aff]
+
+        elif "ikea" in src:
+            code = os.getenv("IKEA_AFFILIATE_CODE", "").strip()
+            if code:
+                query["utm_source"] = ["a2s"]
+                query["utm_medium"] = ["affiliate"]
+                query["utm_campaign"] = [code]
+
+        elif "pepperfry" in src:
+            aff = os.getenv("PEPPERFRY_AFFILIATE_ID", "").strip()
+            if aff:
+                query["aff_id"] = [aff]
+
+        elif "urbanladder" in src:
+            aff = os.getenv("URBANLADDER_AFFILIATE_ID", "").strip()
+            if aff:
+                query["aff_id"] = [aff]
+
+        elif "woodenstreet" in src:
+            aff = os.getenv("WOODENSTREET_AFFILIATE_ID", "").strip()
+            if aff:
+                query["aff_id"] = [aff]
+
+        updated = parsed._replace(query=urlencode(query, doseq=True))
+        return urlunparse(updated)
+    except Exception:
+        return source_url
+
+
+def extract_color(text: str) -> tuple[str, Optional[str]]:
+    """
+    Extract color name and hex code from text.
+    
+    Args:
+        text: Product description or name.
+        
+    Returns:
+        Tuple of (color_name, color_hex).
+    """
+    import re
+    
+    COLOR_MAP = {
+        r'\b(black|jet|ebony|charcoal)\b': ('Black', '#000000'),
+        r'\b(white|ivory|cream|off.?white)\b': ('White', '#FFFFFF'),
+        r'\b(gray|grey|silver|ash|slate)\b': ('Gray', '#808080'),
+        r'\b(brown|walnut|oak|teak|mahogany|chocolate)\b': ('Brown', '#8B4513'),
+        r'\b(gold|golden|brass)\b': ('Gold', '#FFD700'),
+        r'\b(beige|tan|taupe|sand|khaki)\b': ('Beige', '#F5F5DC'),
+        r'\b(blue|navy|cobalt|azure|teal)\b': ('Blue', '#0000FF'),
+        r'\b(green|emerald|olive|sage)\b': ('Green', '#008000'),
+        r'\b(red|crimson|burgundy|maroon)\b': ('Red', '#FF0000'),
+        r'\b(pink|rose|blush|dusty pink)\b': ('Pink', '#FFC0CB'),
+        r'\b(orange|terra|rust)\b': ('Orange', '#FFA500'),
+        r'\b(yellow|golden|mustard)\b': ('Yellow', '#FFFF00'),
+        r'\b(purple|violet|lavender|mauve)\b': ('Purple', '#800080'),
+    }
+    
+    text_lower = text.lower() if text else ""
+    
+    for pattern, (color_name, color_hex) in COLOR_MAP.items():
+        if re.search(pattern, text_lower):
+            return (color_name, color_hex)
+    
+    return (None, None)
+
+
+def extract_material(text: str) -> Optional[str]:
+    """
+    Extract material/construction from product text.
+    
+    Args:
+        text: Product description or name.
+        
+    Returns:
+        Material string (wood, leather, fabric, metal, glass, etc.).
+    """
+    import re
+    
+    MATERIALS = [
+        r'\b(solid wood|hardwood|teak|oak|walnut|pine|plywood)\b',
+        r'\b(leather|genuine leather|faux leather|pu leather)\b',
+        r'\b(fabric|linen|cotton|velvet|microfiber|polyester)\b',
+        r'\b(metal|stainless steel|aluminum|iron|brass|chrome)\b',
+        r'\b(glass|tempered glass)\b',
+        r'\b(plywood|particle board|engineered wood|mdf)\b',
+        r'\b(ceramic|porcelain|marble|granite)\b',
+    ]
+    
+    text_lower = text.lower() if text else ""
+    
+    for pattern in MATERIALS:
+        match = re.search(pattern, text_lower)
+        if match:
+            return clean_text(match.group(1))
+    
+    return None
+
+
+def map_aesthetic_style(product_type: str, product_name: str, description: str = "") -> str:
+    """
+    Map product to aesthetic style category.
+    
+    Args:
+        product_type: Category like 'sofa', 'bed', 'lighting', etc.
+        product_name: Product name.
+        description: Product description.
+        
+    Returns:
+        Aesthetic style: Minimal, Contemporary, Luxury, Boho, Industrial, Scandinavian, Traditional, etc.
+    """
+    import re
+    
+    full_text = f"{product_name} {description}".lower()
+    
+    # Style keyword patterns
+    STYLE_PATTERNS = {
+        "Minimal": r'\b(minimal|simple|sleek|modern|clean|minimalist)\b',
+        "Contemporary": r'\b(contemporary|modern|current|recent|current trends)\b',
+        "Luxury": r'\b(luxury|premium|high.?end|designer|exclusive)\b',
+        "Boho": r'\b(boho|bohemian|eclectic|ethnic|tribal|macrame)\b',
+        "Industrial": r'\b(industrial|warehouse|loft|metal|rustic|vintage)\b',
+        "Scandinavian": r'\b(scandinavian|nordic|scandi|minimalist|danish)\b',
+        "Traditional": r'\b(traditional|classic|vintage|antique|ornate|victorian)\b',
+        "Rustic": r'\b(rustic|farmhouse|countryside|weathered|distressed)\b',
+    }
+    
+    # Check patterns
+    for style, pattern in STYLE_PATTERNS.items():
+        if re.search(pattern, full_text):
+            return style
+    
+    # Fallback based on product type
+    TYPE_DEFAULT_STYLE = {
+        "sofa": "Contemporary",
+        "bed": "Contemporary",
+        "lighting": "Minimal",
+        "table": "Contemporary",
+        "storage": "Minimal",
+        "decor": "Contemporary",
+        "chair": "Contemporary",
+        "textile": "Boho",
+    }
+    
+    return TYPE_DEFAULT_STYLE.get(product_type, "Contemporary")

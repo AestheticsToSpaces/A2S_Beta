@@ -26,6 +26,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from agent.core import process_message, process_vastu
+from vastu_score import analyse_vastu_score
 from data.loader import load_product_catalog
 from utils.formatters import format_product_summary
 
@@ -100,6 +101,37 @@ def vastu():
     except Exception as e:
         print(f"[VASTU] Error: {e}")
         return jsonify({"error": "An internal error occurred"}), 500
+
+
+@app.route('/api/vastu/analyse', methods=['POST'])
+def vastu_score_analyse():
+    room_type = request.form.get('room_type')
+    facing_direction = request.form.get('facing_direction')
+    floor = request.form.get('floor', '')
+    images = request.files.getlist('images')
+
+    if not room_type or not facing_direction:
+        return jsonify({"message": "room_type and facing_direction are required"}), 400
+
+    if not images or len(images) == 0 or len(images) > 3:
+        return jsonify({"message": "Please upload between 1 and 3 images."}), 400
+
+    try:
+        image_bytes = []
+        for img in images:
+            data = img.read()
+            if not data:
+                return jsonify({"message": "One of the uploaded images is empty."}), 400
+            image_bytes.append(data)
+
+        result = analyse_vastu_score(room_type, facing_direction, floor, image_bytes)
+        if result.get("error"):
+            # User-correctable errors map to 422 to help frontend show upload retry state.
+            return jsonify(result), 422
+        return jsonify(sanitize_nans(result)), 200
+    except Exception as e:
+        print(f"[VASTU_SCORE] Error: {e}")
+        return jsonify({"message": "Taking a bit longer than usual. Please try again."}), 503
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))

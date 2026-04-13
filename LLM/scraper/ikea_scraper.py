@@ -22,7 +22,7 @@ import logging
 from typing import Optional
 
 import requests
-from scraper.base import get_session, get_headers, clean_text, logger
+from scraper.base import get_session, get_headers, clean_text, logger, extract_color, map_aesthetic_style, build_affiliate_url
 
 # ──────────────────────────────────────────────
 # IKEA search queries by product type
@@ -157,6 +157,12 @@ def _parse_ikea_product(item: dict, product_type: str) -> Optional[dict]:
         # Colors
         colors = product.get("colors", [])
         color_str = ", ".join([c.get("name", "") for c in colors if c.get("name")]) if colors else ""
+        
+        # Extract primary color and hex
+        primary_color = colors[0].get("name", "") if colors else color_str
+        color_name, color_hex = extract_color(primary_color)
+        if not color_name:
+            color_name, color_hex = extract_color(full_name)
 
         # Quick facts
         quick_facts = product.get("quickFacts", [])
@@ -167,6 +173,9 @@ def _parse_ikea_product(item: dict, product_type: str) -> Optional[dict]:
                     material = clean_text(str(fact))
                     break
 
+        # Aesthetic style
+        aesthetic_style = map_aesthetic_style(product_type, full_name, material)
+
         return {
             "product_id": product_id,
             "product_name": full_name,
@@ -175,11 +184,13 @@ def _parse_ikea_product(item: dict, product_type: str) -> Optional[dict]:
             "price_currency": "INR",
             "product_type": product_type,
             "image_url": image_url,
-            "affiliate_url": product_url,
+            "affiliate_url": build_affiliate_url(product_url, "ikea.com"),
             "source_url": product_url,
             "dimensions": dimensions,
-            "color": color_str,
+            "color": color_name or color_str,
+            "color_hex": color_hex,
             "material": material,
+            "aesthetic_style": aesthetic_style,
             "source": "ikea.com",
         }
 
@@ -188,7 +199,7 @@ def _parse_ikea_product(item: dict, product_type: str) -> Optional[dict]:
         return None
 
 
-def scrape_ikea(max_per_category: int = 50) -> list[dict]:
+def scrape_ikea(max_per_category: int = 200) -> list[dict]:
     """
     Scrape products from IKEA India using their search API.
 

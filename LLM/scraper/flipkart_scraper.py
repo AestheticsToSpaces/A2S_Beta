@@ -17,7 +17,7 @@ from typing import Optional
 
 from bs4 import BeautifulSoup
 
-from scraper.base import get_session, get_headers, fetch_page, clean_price, clean_text, logger
+from scraper.base import get_session, get_headers, fetch_page, clean_price, clean_text, logger, extract_color, extract_material, map_aesthetic_style, build_affiliate_url
 
 # ──────────────────────────────────────────────
 # Flipkart search URLs
@@ -211,6 +211,11 @@ def _extract_from_product_links(soup: BeautifulSoup, product_type: str) -> list[
                 parts = [g for g in dim_match.groups() if g]
                 dimensions = " x ".join(parts) + " cm"
 
+            # Extract color and material
+            color_name, color_hex = extract_color(name)
+            material = extract_material(name)
+            aesthetic_style = map_aesthetic_style(product_type, name, "")
+
             products.append({
                 "product_id": pid,
                 "product_name": name,
@@ -219,9 +224,13 @@ def _extract_from_product_links(soup: BeautifulSoup, product_type: str) -> list[
                 "price_currency": "INR",
                 "product_type": product_type,
                 "image_url": image_url,
-                "affiliate_url": url.split("&")[0],
+                "affiliate_url": build_affiliate_url(url.split("&")[0], "flipkart.com"),
                 "source_url": url.split("&")[0],
                 "dimensions": dimensions,
+                "color": color_name,
+                "color_hex": color_hex,
+                "material": material,
+                "aesthetic_style": aesthetic_style,
                 "rating": rating,
                 "source": "flipkart.com",
             })
@@ -259,16 +268,27 @@ def _parse_flipkart_results(html: str, product_type: str) -> list[dict]:
             p.setdefault("price_value", None)
             p.setdefault("price_currency", "INR")
             p.setdefault("image_url", "")
-            p.setdefault("affiliate_url", p.get("url", ""))
+            p.setdefault("affiliate_url", build_affiliate_url(p.get("url", ""), "flipkart.com"))
             p.setdefault("source_url", p.get("url", ""))
             p.setdefault("dimensions", "")
+            
+            # Add color, material, aesthetic style
+            product_name = p.get("product_name", "")
+            color_name, color_hex = extract_color(product_name)
+            material = extract_material(product_name)
+            aesthetic_style = map_aesthetic_style(product_type, product_name, "")
+            
+            p.setdefault("color", color_name)
+            p.setdefault("color_hex", color_hex)
+            p.setdefault("material", material)
+            p.setdefault("aesthetic_style", aesthetic_style)
             p.setdefault("source", "flipkart.com")
         return [p for p in json_ld_products if p.get("price_value")]
 
     return []
 
 
-def scrape_flipkart(max_per_category: int = 100) -> list[dict]:
+def scrape_flipkart(max_per_category: int = 200) -> list[dict]:
     """
     Scrape products from Flipkart with pagination.
 

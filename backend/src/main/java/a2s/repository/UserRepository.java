@@ -12,4 +12,5 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     long countByJoinedPhase2WaitlistTrue();
     long countByJoinedPhase2WaitlistTrueAndWaitlistJoinedAtBefore(LocalDateTime date);
+    boolean existsByPhase2ReferralCode(String phase2ReferralCode);
 }

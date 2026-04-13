@@ -99,7 +99,7 @@ public class AuthController {
         System.out.println("[AUTH] User registered successfully: " + signUpRequest.getEmail());
 
         // Log activity
-        activityRepository.save(new Activity(email, "User Registration", "New account created from " + (user.getLocation() != null ? user.getLocation() : "Unknown")));
+        activityRepository.save(new Activity(email, "User Registration", "New account created from " + (user.getLocation() != null ? user.getLocation() : "Not specified")));
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }

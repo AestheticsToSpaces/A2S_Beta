@@ -59,6 +59,7 @@ public class User {
     private String phoneNumber;
     private Boolean joinedPhase2Waitlist = false;
     private LocalDateTime waitlistJoinedAt;
+    private String phase2ReferralCode;
 
     private String provider;
     private String providerId;

@@ -11,10 +11,14 @@ import java.util.Optional;
 import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDateTime;
+import java.security.SecureRandom;
 
 @RestController
 @RequestMapping("/api/waitlist")
 public class WaitlistController {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String REFERRAL_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     @Autowired
     UserRepository userRepository;
@@ -31,6 +35,7 @@ public class WaitlistController {
         
         Optional<User> userOpt = userRepository.findByEmail(email);
         boolean joined = userOpt.map(User::getJoinedPhase2Waitlist).orElse(false);
+        long totalWaitlist = userRepository.countByJoinedPhase2WaitlistTrue();
 
         Map<String, Object> response = new HashMap<>();
         
@@ -42,20 +47,21 @@ public class WaitlistController {
             }
             
             long countBefore = userRepository.countByJoinedPhase2WaitlistTrueAndWaitlistJoinedAtBefore(user.getWaitlistJoinedAt());
-            long totalWaitlist = userRepository.countByJoinedPhase2WaitlistTrue();
             long rank = countBefore + 1;
-            
-            // Progress is calculated relative to a goal (e.g. 2000)
-            int progress = (int) Math.min(95, 75 + (totalWaitlist * 20 / 2000));
+
+            if (user.getPhase2ReferralCode() == null || user.getPhase2ReferralCode().isBlank()) {
+                user.setPhase2ReferralCode(generateUniqueReferralCode());
+                userRepository.save(user);
+            }
             
             response.put("joined", true);
             response.put("rank", "#" + String.format("%,d", rank));
-            response.put("progress", progress);
-            response.put("inviteCode", "A2S-PHASE2-" + (1000 + (Math.abs(user.getId().hashCode()) % 9000)));
+            response.put("totalWaitlist", totalWaitlist);
+            response.put("inviteCode", user.getPhase2ReferralCode());
         } else {
             response.put("joined", false);
             response.put("rank", "-");
-            response.put("progress", 0);
+            response.put("totalWaitlist", totalWaitlist);
             response.put("inviteCode", null);
         }
         
@@ -84,5 +90,19 @@ public class WaitlistController {
         }
         
         return ResponseEntity.badRequest().body(Map.of("message", "User not found. Please log in again."));
+    }
+
+    private String generateUniqueReferralCode() {
+        for (int attempts = 0; attempts < 20; attempts++) {
+            StringBuilder code = new StringBuilder("A2S-");
+            for (int i = 0; i < 8; i++) {
+                code.append(REFERRAL_CHARS.charAt(RANDOM.nextInt(REFERRAL_CHARS.length())));
+            }
+            String referralCode = code.toString();
+            if (!userRepository.existsByPhase2ReferralCode(referralCode)) {
+                return referralCode;
+            }
+        }
+        return "A2S-" + Long.toHexString(System.currentTimeMillis()).toUpperCase();
     }
 }

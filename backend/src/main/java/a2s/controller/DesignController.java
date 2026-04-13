@@ -22,7 +22,7 @@ public class DesignController {
     @GetMapping
     @Cacheable("designs")
     public ResponseEntity<List<Design>> getAllDesigns() {
-        List<Design> designs = designRepository.findAllBy();
+        List<Design> designs = designRepository.findAll();
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(2, TimeUnit.MINUTES).staleWhileRevalidate(5, TimeUnit.MINUTES))
                 .body(designs);

@@ -17,22 +17,73 @@ import argparse
 import re
 import sys
 import os
+import json
+import math
 from datetime import datetime
 
 import pandas as pd
+import requests
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scraper.base import logger
+from utils.product_mapper import map_product_type_to_room_types
 
 
-def run_scraper(sites: list[str], max_per_category: int = 30) -> pd.DataFrame:
+ROOM_TYPE_NORMALIZATION = {
+    "living room": "Living Room",
+    "livingroom": "Living Room",
+    "living": "Living Room",
+    "bedroom": "Bedroom",
+    "master bedroom": "Bedroom",
+    "guest bedroom": "Bedroom",
+    "dining": "Dining Room",
+    "dining room": "Dining Room",
+    "kitchen": "Kitchen",
+    "office": "Home Office",
+    "home office": "Home Office",
+    "home-office": "Home Office",
+    "study": "Home Office",
+    "bathroom": "Bathroom",
+    "balcony": "Balcony",
+    "pooja room": "Pooja Room",
+    "pooja": "Pooja Room",
+}
+
+
+def safe_str(value, fallback=""):
+    if value is None:
+        return fallback
+    if isinstance(value, float) and math.isnan(value):
+        return fallback
+    text = str(value).strip()
+    return text if text else fallback
+
+
+def safe_float(value, fallback=0.0):
+    try:
+        if value is None:
+            return fallback
+        if isinstance(value, float) and math.isnan(value):
+            return fallback
+        return float(value)
+    except Exception:
+        return fallback
+
+
+def normalize_room_type(value: str) -> str:
+    raw = safe_str(value, "Living Room")
+    key = raw.lower().replace("_", " ").strip()
+    return ROOM_TYPE_NORMALIZATION.get(key, raw.title())
+
+
+def run_scraper(sites: list[str], max_per_category: int = 200) -> pd.DataFrame:
     """
     Run selected scrapers and return combined DataFrame.
 
     Args:
-        sites: List of site names to scrape ("ikea", "amazon", "flipkart").
+        sites: List of site names to scrape ("ikea", "amazon", "flipkart", "pepperfry", "urbanladder", "woodenstreet").
         max_per_category: Max products per category per site.
 
     Returns:
@@ -57,6 +108,24 @@ def run_scraper(sites: list[str], max_per_category: int = 30) -> pd.DataFrame:
         products = scrape_flipkart(max_per_category=max_per_category)
         all_products.extend(products)
         logger.info(f"Flipkart: {len(products)} products")
+
+    if "pepperfry" in sites:
+        from scraper.pepperfry_scraper import scrape_pepperfry
+        products = scrape_pepperfry(max_per_category=max_per_category)
+        all_products.extend(products)
+        logger.info(f"Pepperfry: {len(products)} products")
+
+    if "urbanladder" in sites:
+        from scraper.urbanladder_scraper import scrape_urbanladder
+        products = scrape_urbanladder(max_per_category=max_per_category)
+        all_products.extend(products)
+        logger.info(f"Urban Ladder: {len(products)} products")
+
+    if "woodenstreet" in sites:
+        from scraper.woodenstreet_scraper import scrape_woodenstreet
+        products = scrape_woodenstreet(max_per_category=max_per_category)
+        all_products.extend(products)
+        logger.info(f"WoodenStreet: {len(products)} products")
 
     if not all_products:
         logger.warning("No products scraped from any site!")
@@ -111,6 +180,15 @@ def _clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["brand"] = df["brand"].fillna("Unknown").apply(
         lambda x: "Unknown" if not x or len(str(x)) > 50 else str(x).strip()
     )
+    
+    # Clean color, material, aesthetic_style with defaults
+    df["color"] = df["color"].fillna("Multi-tone").apply(lambda x: str(x).strip() if x else "Multi-tone")
+    # Keep null hex values as None without triggering pandas fillna validation errors.
+    df["color_hex"] = df["color_hex"].where(df["color_hex"].notna(), None)
+    df["material"] = df["material"].fillna("Premium").apply(lambda x: str(x).strip() if x else "Premium")
+    df["aesthetic_style"] = df["aesthetic_style"].fillna("Contemporary").apply(
+        lambda x: str(x).strip() if x else "Contemporary"
+    )
 
     # Parse dimensions
     dim_parsed = df["dimensions"].apply(_parse_dimensions).apply(pd.Series)
@@ -121,6 +199,17 @@ def _clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     # Add metadata
     df["price_currency"] = "INR"
     df["scraped_date"] = datetime.now().strftime("%Y-%m-%d")
+
+    # Ensure room_type exists and is mapped from product_type when missing.
+    if "room_type" not in df.columns:
+        df["room_type"] = None
+
+    df["room_type"] = df.apply(
+        lambda row: safe_str(row.get("room_type"))
+        or map_product_type_to_room_types(safe_str(row.get("product_type"), "misc"))[0],
+        axis=1,
+    )
+    df["room_type"] = df["room_type"].apply(normalize_room_type)
 
     # Sort by source then price
     df = df.sort_values(["source", "product_type", "price_value"]).reset_index(drop=True)
@@ -137,7 +226,8 @@ def export_to_excel(df: pd.DataFrame, output_dir: str = ".") -> str:
     # Select and order columns for export
     export_cols = [
         "product_id", "product_name", "brand", "price_value", "price_currency",
-        "product_type", "dimensions", "width_cm", "depth_cm", "height_cm",
+        "product_type", "room_type", "color", "color_hex", "material", "aesthetic_style",
+        "dimensions", "width_cm", "depth_cm", "height_cm",
         "image_url", "affiliate_url", "source_url", "source", "scraped_date",
     ]
 
@@ -149,7 +239,70 @@ def export_to_excel(df: pd.DataFrame, output_dir: str = ".") -> str:
     return filepath
 
 
-def print_summary(df: pd.DataFrame) -> None:
+def export_to_json(df: pd.DataFrame, output_dir: str = ".") -> str:
+    """Export DataFrame to JSON file with timestamp."""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"scraped_products_{timestamp}.json"
+    filepath = os.path.join(output_dir, filename)
+
+    # Normalize fields for backend import payload
+    payload = []
+    for row in df.to_dict(orient="records"):
+        payload.append({
+            "name": safe_str(row.get("product_name")),
+            "brand": safe_str(row.get("brand"), "Unknown"),
+            "category": safe_str(row.get("product_type"), "decor"),
+            "roomType": safe_str(row.get("room_type"), "Living Room"),
+            "aestheticStyle": safe_str(row.get("aesthetic_style"), "Contemporary"),
+            "price": safe_float(row.get("price_value"), 0.0),
+            "dimensions": safe_str(row.get("dimensions")),
+            "color": safe_str(row.get("color"), "Multi-tone"),
+            "colorHex": safe_str(row.get("color_hex"), None),
+            "material": safe_str(row.get("material"), "Premium"),
+            "vendor": safe_str(row.get("source"), "Marketplace").replace(".com", "").upper(),
+            "description": safe_str(row.get("source_url")),
+            "affiliateLink": safe_str(row.get("affiliate_url")) or safe_str(row.get("source_url")),
+            "image": safe_str(row.get("image_url")),
+            "gallery": [safe_str(row.get("image_url"))] if safe_str(row.get("image_url")) else [],
+        })
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    logger.info(f"Exported {len(payload)} products to {filepath}")
+    return filepath
+
+
+def push_to_backend(df: pd.DataFrame, backend_url: str) -> dict:
+    """Push scraped records to backend import API."""
+    payload = []
+    for row in df.to_dict(orient="records"):
+        payload.append({
+            "name": safe_str(row.get("product_name")),
+            "brand": safe_str(row.get("brand"), "Unknown"),
+            "category": safe_str(row.get("product_type"), "decor"),
+            "roomType": safe_str(row.get("room_type"), "Living Room"),
+            "aestheticStyle": safe_str(row.get("aesthetic_style"), "Contemporary"),
+            "price": safe_float(row.get("price_value"), 0.0),
+            "dimensions": safe_str(row.get("dimensions")),
+            "color": safe_str(row.get("color"), "Multi-tone"),
+            "colorHex": safe_str(row.get("color_hex"), None),
+            "material": safe_str(row.get("material"), "Premium"),
+            "vendor": safe_str(row.get("source"), "Marketplace").replace(".com", "").upper(),
+            "description": safe_str(row.get("source_url")),
+            "affiliateLink": safe_str(row.get("affiliate_url")) or safe_str(row.get("source_url")),
+            "image": safe_str(row.get("image_url")),
+            "gallery": [safe_str(row.get("image_url"))] if safe_str(row.get("image_url")) else [],
+        })
+
+    response = requests.post(f"{backend_url.rstrip('/')}/api/products/import", json=payload, timeout=60)
+    response.raise_for_status()
+    result = response.json()
+    logger.info(f"Backend import complete: {result}")
+    return result
+
+
+def print_summary(df: pd.DataFrame, min_per_room: int = 200) -> None:
     """Print a human-readable summary of scraped data."""
     print("\n" + "=" * 60)
     print("  SCRAPING RESULTS SUMMARY")
@@ -167,6 +320,19 @@ def print_summary(df: pd.DataFrame) -> None:
     print(f"\n  By product type:")
     for ptype, count in df["product_type"].value_counts().items():
         print(f"    {ptype:20s} {count:4d} products")
+
+    print(f"\n  By room type:")
+    room_counts = df["room_type"].fillna("Unknown").apply(normalize_room_type).value_counts()
+    for room, count in room_counts.items():
+        print(f"    {room:20s} {count:4d} products")
+
+    below_min = room_counts[room_counts < min_per_room]
+    if len(below_min) == 0:
+        print(f"\n  Room minimum check (>= {min_per_room}): PASS")
+    else:
+        print(f"\n  Room minimum check (>= {min_per_room}): WARNING")
+        for room, count in below_min.items():
+            print(f"    {room:20s} {count:4d} products (below minimum)")
 
     print(f"\n  Price range: ₹{df['price_value'].min():,.0f} – ₹{df['price_value'].max():,.0f}")
     print(f"  Avg price:   ₹{df['price_value'].mean():,.0f}")
@@ -187,21 +353,38 @@ def main():
     parser.add_argument(
         "--sites",
         nargs="+",
-        choices=["ikea", "amazon", "flipkart"],
-        default=["ikea", "amazon", "flipkart"],
+        choices=["ikea", "amazon", "flipkart", "pepperfry", "urbanladder", "woodenstreet"],
+        default=["ikea", "amazon", "flipkart", "pepperfry", "urbanladder", "woodenstreet"],
         help="Sites to scrape (default: all)",
     )
     parser.add_argument(
         "--max",
         type=int,
-        default=30,
-        help="Max products per category per site (default: 30)",
+        default=200,
+        help="Max products per category per site (default: 200)",
+    )
+    parser.add_argument(
+        "--min-per-room",
+        type=int,
+        default=200,
+        help="Minimum expected products per room type for summary validation (default: 200)",
     )
     parser.add_argument(
         "--output",
         type=str,
         default=".",
         help="Output directory (default: current)",
+    )
+    parser.add_argument(
+        "--push-backend",
+        action="store_true",
+        help="Push scraped records to backend /api/products/import",
+    )
+    parser.add_argument(
+        "--backend-url",
+        type=str,
+        default="http://localhost:8080",
+        help="Backend base URL for import (default: http://localhost:8080)",
     )
 
     args = parser.parse_args()
@@ -214,8 +397,17 @@ def main():
 
     if not df.empty:
         filepath = export_to_excel(df, output_dir=args.output)
-        print_summary(df)
+        json_path = export_to_json(df, output_dir=args.output)
+        print_summary(df, min_per_room=args.min_per_room)
         print(f"📁 Data saved to: {filepath}")
+        print(f"📁 JSON payload saved to: {json_path}")
+
+        if args.push_backend:
+            try:
+                import_result = push_to_backend(df, args.backend_url)
+                print(f"✅ Backend import: created={import_result.get('created', 0)} updated={import_result.get('updated', 0)} total={import_result.get('total', 0)}")
+            except Exception as exc:
+                print(f"❌ Backend import failed: {exc}")
     else:
         print("❌ No products were scraped. Sites may be blocking requests.")
         print("   Try again later or with different settings.")

@@ -74,7 +74,7 @@ _JUNK_BRAND_PATTERNS = [
 
 # Words that are NOT brands (colors, shapes, generic terms)
 _NOT_BRANDS = {
-    "unknown", "black", "white", "gold", "silver", "brown", "grey", "gray",
+    "black", "white", "gold", "silver", "brown", "grey", "gray",
     "red", "blue", "green", "yellow", "beige", "pink", "orange", "purple",
     "multicolor", "round", "oval", "rectangle", "square", "designer",
     "modern", "classic", "vintage", "premium", "luxury", "set",
@@ -102,22 +102,22 @@ def _clean_brand(brand: str, product_name: str = "") -> str:
     from product_name if the brand field is junk.
     """
     if not brand or pd.isna(brand):
-        brand = "Unknown"
+        brand = "Marketplace"
     else:
         brand = str(brand).strip()
 
     # Check for junk HTML patterns
     for pattern in _JUNK_BRAND_PATTERNS:
         if re.search(pattern, brand, re.IGNORECASE):
-            brand = "Unknown"
+            brand = "Marketplace"
             break
 
     # Check for false brands (colors, shapes, etc.)
     if brand.lower() in _NOT_BRANDS:
-        brand = "Unknown"
+        brand = "Marketplace"
 
-    # If still Unknown, try to extract from product_name
-    if brand == "Unknown" and product_name:
+    # If still fallback, try to extract from product_name
+    if brand == "Marketplace" and product_name:
         name = str(product_name).strip()
 
         # Check if a known brand appears in the name
@@ -128,8 +128,8 @@ def _clean_brand(brand: str, product_name: str = "") -> str:
                 brand = kb.title()
                 break
 
-        # If still unknown, try the first word/phrase before common separators
-        if brand == "Unknown":
+        # If still fallback, try the first word/phrase before common separators
+        if brand == "Marketplace":
             # Common patterns: "BrandName ProductType..." or "Brand Name - Product"
             first_part = re.split(r"\s+(?:for|with|in|and|set|\d|[-|])", name, maxsplit=1)[0]
             # Take first 1-2 words that look like a brand
