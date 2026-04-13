@@ -1,16 +1,13 @@
 # Secrets - NEVER commit these
 .env
 *.env
-
 # Python
 venv/
 __pycache__/
 *.pyc
-
 # Java build output
 target/
-
-# Logs
+# Logs 
 logs
 *.log
 npm-debug.log*
@@ -18,17 +15,28 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
 node_modules
 dist
 dist-ssr
 *.local
-
+# Generated catalog outputs
+LLM/scraped_products_*.xlsx
+LLM/scraped_products_*.json
+LLM/catalog_exports/
+LLM/output/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+/.claude/
+/.cursor/
+/.mcp.json
+/.opencode.json
+/.windsurfrules
+/.cursorrules
+/AGENTS.md
+/package-lock.json
 *.suo
 *.ntvs*
 *.njsproj

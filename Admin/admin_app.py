@@ -218,7 +218,57 @@ elif view == "Product Catalog":
     products = fetch_api(PRODUCTS_API)
     if products:
         df = pd.DataFrame(products)
-        st.dataframe(df, use_container_width=True)
+        
+        # Add room_type filtering
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.write("**Filters**")
+        with col2:
+            if st.button("Clear Filters"):
+                st.session_state.room_filter = "All"
+                st.session_state.category_filter = "All"
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            room_types = ["All"] + sorted(df["roomType"].dropna().unique().tolist()) if "roomType" in df.columns else ["All"]
+            selected_room = st.selectbox("Room Type", room_types, key="room_filter")
+        
+        with col2:
+            categories = ["All"] + sorted(df["category"].dropna().unique().tolist()) if "category" in df.columns else ["All"]
+            selected_category = st.selectbox("Product Type", categories, key="category_filter")
+        
+        # Apply filters
+        if selected_room != "All" and "roomType" in df.columns:
+            df = df[df["roomType"] == selected_room]
+        
+        if selected_category != "All" and "category" in df.columns:
+            df = df[df["category"] == selected_category]
+        
+        # Display stats
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Visible Products", len(df))
+        with col2:
+            if "price" in df.columns:
+                st.metric("Avg Price", f"₹{df['price'].mean():,.0f}")
+        with col3:
+            if "price" in df.columns:
+                st.metric("Price Range", f"₹{df['price'].min():,.0f} - ₹{df['price'].max():,.0f}")
+        
+        # Display table with key columns
+        display_cols = ["name", "brand", "category", "roomType", "price", "vendor"]
+        cols_to_show = [c for c in display_cols if c in df.columns]
+        st.dataframe(df[cols_to_show], use_container_width=True, height=400)
+        
+        # Export option
+        if st.button("Export Filtered Products"):
+            csv = df.to_csv(index=False)
+            st.download_button(
+                label="Download CSV",
+                data=csv,
+                file_name="products_filtered.csv",
+                mime="text/csv"
+            )
     else:
         st.info("The Material Library is currently unpopulated.")
 

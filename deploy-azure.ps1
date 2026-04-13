@@ -37,9 +37,12 @@ $BACKEND_IMAGE     = "$ACR_LOGIN_SERVER/$BACKEND_APP`:latest"
 $FRONTEND_IMAGE    = "$ACR_LOGIN_SERVER/$FRONTEND_APP`:latest"
 $LLM_IMAGE         = "$ACR_LOGIN_SERVER/$LLM_APP`:latest"
 
-# Azure SQL JDBC connection string for Spring Boot
-$DB_URL     = "jdbc:sqlserver://`$($envVars['SERVER']);databaseName=`$($envVars['DATABASE']);encrypt=true;trustServerCertificate=false;loginTimeout=30"
-$DB_URL     = "jdbc:sqlserver://$($envVars['SERVER']);databaseName=$($envVars['DATABASE']);encrypt=true;trustServerCertificate=false;loginTimeout=30"
+# Azure PostgreSQL JDBC connection string for Spring Boot
+$DB_HOST    = if ($envVars.ContainsKey('POSTGRES_HOST')) { $envVars['POSTGRES_HOST'] } else { $envVars['SERVER'] }
+$DB_NAME    = if ($envVars.ContainsKey('POSTGRES_DB')) { $envVars['POSTGRES_DB'] } else { $envVars['DATABASE'] }
+$DB_USER    = if ($envVars.ContainsKey('POSTGRES_USER')) { $envVars['POSTGRES_USER'] } else { $envVars['DB_USERNAME'] }
+$DB_PASS    = if ($envVars.ContainsKey('POSTGRES_PASSWORD')) { $envVars['POSTGRES_PASSWORD'] } else { $envVars['DB_PASSWORD'] }
+$DB_URL     = "jdbc:postgresql://$DB_HOST:5432/$DB_NAME?sslmode=require"
 
 Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host "  A2S Azure Deployment Starting" -ForegroundColor Cyan
@@ -118,14 +121,12 @@ az containerapp create `
     --cpu 0.5 --memory 1.0Gi `
     --env-vars `
         "DB_URL=$DB_URL" `
-        "DB_USER=$($envVars['DB_USERNAME'])" `
-        "DB_PASSWORD=$($envVars['DB_PASSWORD'])" `
-        "DB_DRIVER=com.microsoft.sqlserver.jdbc.SQLServerDriver" `
-        "DB_DIALECT=org.hibernate.dialect.SQLServerDialect" `
+        "DB_USER=$DB_USER" `
+        "DB_PASSWORD=$DB_PASS" `
+        "DB_DRIVER=org.postgresql.Driver" `
+        "DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect" `
         "H2_CONSOLE=false" `
         "JWT_SECRET=$($envVars['JWT_SECRET'])" `
-        "SUPABASE_URL=$($envVars['SUPABASE_URL'])" `
-        "SUPABASE_ANON_KEY=$($envVars['SUPABASE_ANON_KEY'])" `
         "CORS_ORIGINS=https://$FRONTEND_APP.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io,http://localhost:3000" `
         "LLM_SERVICE_URL=http://$LLM_APP"
 
@@ -155,10 +156,10 @@ az containerapp create `
     --env-vars `
         "GEMINI_API_KEY=$($envVars['GEMINI_API_KEY'])" `
         "GROQ_API_KEY=$($envVars['GROQ_API_KEY'])" `
-        "SERVER=$($envVars['SERVER'])" `
-        "DATABASE=$($envVars['DATABASE'])" `
-        "DB_USERNAME=$($envVars['DB_USERNAME'])" `
-        "DB_PASSWORD=$($envVars['DB_PASSWORD'])" `
+        "POSTGRES_HOST=$DB_HOST" `
+        "POSTGRES_DB=$DB_NAME" `
+        "POSTGRES_USER=$DB_USER" `
+        "POSTGRES_PASSWORD=$DB_PASS" `
         "PORT=5001"
 
 Write-Host "  ✓ LLM service deployed (internal only)" -ForegroundColor Green

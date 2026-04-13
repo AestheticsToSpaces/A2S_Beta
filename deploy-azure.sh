@@ -42,7 +42,11 @@ BACKEND_IMAGE="${ACR_LOGIN_SERVER}/${BACKEND_APP}:latest"
 FRONTEND_IMAGE="${ACR_LOGIN_SERVER}/${FRONTEND_APP}:latest"
 LLM_IMAGE="${ACR_LOGIN_SERVER}/${LLM_APP}:latest"
 
-DB_JDBC_URL="jdbc:sqlserver://${SERVER};databaseName=${DATABASE};encrypt=true;trustServerCertificate=false;loginTimeout=30"
+DB_HOST="${POSTGRES_HOST:-${SERVER:-}}"
+DB_NAME="${POSTGRES_DB:-${DATABASE:-}}"
+DB_USER="${POSTGRES_USER:-${DB_USERNAME:-}}"
+DB_PASSWORD_VALUE="${POSTGRES_PASSWORD:-${DB_PASSWORD:-}}"
+DB_JDBC_URL="jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}?sslmode=require"
 
 echo "═══════════════════════════════════════════════════"
 echo "  A2S Azure Deployment Starting"
@@ -102,14 +106,12 @@ az containerapp create \
     --cpu 0.5 --memory 1.0Gi \
     --env-vars \
         "DB_URL=${DB_JDBC_URL}" \
-        "DB_USER=${DB_USERNAME}" \
-        "DB_PASSWORD=${DB_PASSWORD}" \
-        "DB_DRIVER=com.microsoft.sqlserver.jdbc.SQLServerDriver" \
-        "DB_DIALECT=org.hibernate.dialect.SQLServerDialect" \
+        "DB_USER=${DB_USER}" \
+        "DB_PASSWORD=${DB_PASSWORD_VALUE}" \
+        "DB_DRIVER=org.postgresql.Driver" \
+        "DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect" \
         "H2_CONSOLE=false" \
         "JWT_SECRET=${JWT_SECRET}" \
-        "GEMINI_API_KEY=${GEMINI_API_KEY}" \
-        "GROQ_API_KEY=${GROQ_API_KEY}" \
         "CORS_ORIGINS=http://localhost:3000" \
         "LLM_SERVICE_URL=http://${LLM_APP}" 2>/dev/null \
 || az containerapp update \
@@ -142,10 +144,10 @@ az containerapp create \
     --env-vars \
         "GEMINI_API_KEY=${GEMINI_API_KEY}" \
         "GROQ_API_KEY=${GROQ_API_KEY}" \
-        "SERVER=${SERVER}" \
-        "DATABASE=${DATABASE}" \
-        "DB_USERNAME=${DB_USERNAME}" \
-        "DB_PASSWORD=${DB_PASSWORD}" \
+        "POSTGRES_HOST=${DB_HOST}" \
+        "POSTGRES_DB=${DB_NAME}" \
+        "POSTGRES_USER=${DB_USER}" \
+        "POSTGRES_PASSWORD=${DB_PASSWORD_VALUE}" \
         "PORT=5001" 2>/dev/null \
 || az containerapp update \
     --name "$LLM_APP" \
