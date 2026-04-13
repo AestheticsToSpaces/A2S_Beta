@@ -48,7 +48,7 @@ const Footer = () => {
                         <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">Explore</h4>
                         <ul className="space-y-4 text-sm text-main/70 font-medium">
                             <li><Link to="/gallery" className="hover:text-accent transition-all duration-300">Explore Gallery</Link></li>
-                            <li><Link to="/vinsight" className="hover:text-accent transition-all duration-300">VInsight (Vastu)</Link></li>
+                            <li><Link to="/vastu-score" className="hover:text-accent transition-all duration-300">Vastu Score</Link></li>
                             <li><Link to="/onboarding" className="hover:text-accent transition-all duration-300">Find Your Style</Link></li>
                             <li><Link to="/waitlist" className="hover:text-accent transition-all duration-300">Phase 2 Waitlist</Link></li>
                         </ul>

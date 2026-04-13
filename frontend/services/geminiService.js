@@ -51,7 +51,7 @@ class GeminiService {
             }
 
             const data = await response.json();
-            return this._normalizeResponse(data);
+            return this._normalizeVastuAudit(data);
         } catch (error) {
             console.error('Error performing Vastu audit:', error);
             throw error;
@@ -69,6 +69,41 @@ class GeminiService {
             vastu: data.vastu || null,
             filters: data.filters || {},
             error: data.error || null,
+        };
+    }
+
+    _normalizeVastuAudit(data) {
+        const scoreValue = Number.isFinite(Number(data?.score))
+            ? Math.max(0, Math.min(100, Number(data.score)))
+            : Number.isFinite(Number(data?.vastu_score))
+                ? Math.max(0, Math.min(100, Number(data.vastu_score)))
+                : 0;
+
+        const pros = Array.isArray(data?.pros)
+            ? data.pros
+            : Array.isArray(data?.vastu_pros)
+                ? data.vastu_pros
+                : [];
+
+        const cons = Array.isArray(data?.cons)
+            ? data.cons
+            : Array.isArray(data?.vastu_cons)
+                ? data.vastu_cons
+                : [];
+
+        const summary = data?.summary || data?.vastu_summary || 'Audit complete. View details.';
+
+        return {
+            ...data,
+            score: scoreValue,
+            summary,
+            pros,
+            cons,
+            // Backward-compatible fields used by older widgets.
+            vastu_score: scoreValue,
+            vastu_summary: summary,
+            vastu_pros: pros.map((item) => (typeof item === 'string' ? item : item?.text || '')),
+            vastu_cons: cons.map((item) => (typeof item === 'string' ? item : item?.text || '')),
         };
     }
 }

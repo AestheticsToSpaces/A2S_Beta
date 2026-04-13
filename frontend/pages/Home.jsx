@@ -628,9 +628,9 @@ const Home = () => {
                             <p className="text-muted text-base md:text-lg leading-relaxed mb-6">
                                 VInsight brings this ancient wisdom into the modern world. Upload a photo, describe where your idol faces, and our AI audits everything — from pooja placement to mirror positions, plant sectors, and water elements — checking objects <em>and</em> room zones against centuries of Vastu rules. Then it gives you <strong>actionable suggestions</strong> to fix what's off.
                             </p>
-                            <Link to="/vinsight" className="btn-premium btn-premium-outline px-8 py-4 group text-sm">
+                            <Link to="/vastu-score" className="btn-premium btn-premium-outline px-8 py-4 group text-sm">
                                 <Eye size={16} />
-                                <span>Try VInsight</span>
+                                <span>Try Vastu Score</span>
                             </Link>
                         </div>
                     </div>

@@ -57,7 +57,7 @@ const Dashboard = () => {
     const [error, setError] = useState(null);
     const [activeView, setActiveView] = useState('overview');
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-    const [waitlistStatus, setWaitlistStatus] = useState({ joined: false, rank: null, progress: 0, inviteCode: '' });
+    const [waitlistStatus, setWaitlistStatus] = useState({ joined: false, rank: null, totalWaitlist: 0, inviteCode: '' });
     const [joiningWaitlist, setJoiningWaitlist] = useState(false);
     const [waitlistCopied, setWaitlistCopied] = useState(false);
     const { toasts, removeToast, toast } = useToast();
@@ -415,6 +415,9 @@ const Dashboard = () => {
                                                             src={product.image || product.image_url}
                                                             alt=""
                                                             className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
+                                                            onError={(e) => {
+                                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=400';
+                                                            }}
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                                                         <div className="absolute top-6 right-6 flex flex-col gap-3 z-20">
@@ -425,7 +428,7 @@ const Dashboard = () => {
                                                     </div>
                                                     <div className="p-8">
                                                         <div className="flex justify-between items-start mb-2">
-                                                            <p className="text-[9px] font-black text-accent uppercase tracking-[0.3em]">{product.brand || product.vendor}</p>
+                                                            <p className="text-[9px] font-black text-accent uppercase tracking-[0.3em]">{product.brand && product.brand.toLowerCase() !== 'unknown' ? product.brand : (product.vendor || 'Marketplace')}</p>
                                                             <p className="text-[10px] font-black text-main italic">₹{product.price?.toLocaleString('en-IN')}</p>
                                                         </div>
                                                         <h3 className="font-serif text-xl font-black text-main italic group-hover:text-accent transition-colors truncate">
@@ -647,26 +650,23 @@ const Dashboard = () => {
                                                     </div>
                                                     <div className="flex justify-between items-end mb-4">
                                                         <div>
-                                                            <p className="text-[9px] text-muted uppercase tracking-[0.2em] font-black">Position</p>
-                                                            <p className="font-serif text-3xl font-black text-white italic">{waitlistStatus.rank || '—'}</p>
+                                                            <p className="text-[9px] text-green-700/70 uppercase tracking-[0.2em] font-black">Position</p>
+                                                            <p className="font-serif text-3xl font-black text-main italic">{waitlistStatus.rank || '—'}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[9px] text-muted uppercase tracking-[0.2em] font-black">Progress</p>
-                                                            <p className="text-2xl font-black text-accent">{waitlistStatus.progress || 0}%</p>
+                                                            <p className="text-[9px] text-green-700/70 uppercase tracking-[0.2em] font-black">Total in Queue</p>
+                                                            <p className="text-2xl font-black text-accent">{Number(waitlistStatus.totalWaitlist || 0).toLocaleString('en-IN')}</p>
                                                         </div>
-                                                    </div>
-                                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${waitlistStatus.progress || 0}%` }} />
                                                     </div>
                                                 </div>
                                                 {waitlistStatus.inviteCode && (
-                                                    <div className="p-6 rounded-[32px] bg-white/5 border border-white/5">
-                                                        <p className="text-[9px] text-muted uppercase tracking-[0.3em] font-black mb-3">Referral Code</p>
+                                                    <div className="p-6 rounded-[32px] bg-white border border-premium shadow-sm">
+                                                        <p className="text-[9px] text-main uppercase tracking-[0.3em] font-black mb-3">Referral Code</p>
                                                         <div className="flex gap-3 items-center">
-                                                            <div className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-premium font-mono text-sm text-white truncate">
+                                                            <div className="flex-1 px-4 py-3 rounded-xl bg-neutral-50 border border-premium font-mono text-sm text-main truncate">
                                                                 {waitlistStatus.inviteCode}
                                                             </div>
-                                                            <button onClick={copyWaitlistCode} className="px-4 py-3 rounded-xl border border-premium text-muted hover:text-accent hover:border-accent/40 transition-all">
+                                                            <button onClick={copyWaitlistCode} className="px-4 py-3 rounded-xl border border-premium text-muted hover:text-accent hover:border-accent/40 hover:bg-accent/5 transition-all">
                                                                 {waitlistCopied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
                                                             </button>
                                                         </div>

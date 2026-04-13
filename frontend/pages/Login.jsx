@@ -44,10 +44,18 @@ const Login = () => {
         });
     }, [formData.password]);
     
-    // Handle OAuth2 redirect token
+    // Handle OAuth2 redirect token for both HashRouter and normal URLs
     useEffect(() => {
-        const query = new URLSearchParams(location.search);
-        const token = query.get('token');
+        const routerQueryToken = new URLSearchParams(location.search).get('token');
+        const urlQueryToken = new URLSearchParams(window.location.search).get('token');
+
+        let hashQueryToken = null;
+        if (window.location.hash.includes('?')) {
+            const hashQuery = window.location.hash.split('?')[1] || '';
+            hashQueryToken = new URLSearchParams(hashQuery).get('token');
+        }
+
+        const token = routerQueryToken || urlQueryToken || hashQueryToken;
         if (token) {
             handleOAuth2Success(token);
         }
@@ -146,7 +154,9 @@ const Login = () => {
                 <div className="w-full max-w-md relative" style={{ animation: 'fadeInUp 0.6s ease-out' }}>
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <p className="text-sm font-black uppercase tracking-[0.4em] text-accent mb-4 animate-fade-in-up stagger-1">Welcome Back</p>
+                        <p className="text-sm font-black uppercase tracking-[0.4em] text-accent mb-4 animate-fade-in-up stagger-1">
+                            {isLogin ? 'Welcome Back' : 'Welcome'}
+                        </p>
                         <h1 className="text-4xl md:text-6xl font-black text-main animate-fade-in-up stagger-2 mb-6">
                             Luxury <span className="text-gradient-gold italic">Awaits</span>
                         </h1>

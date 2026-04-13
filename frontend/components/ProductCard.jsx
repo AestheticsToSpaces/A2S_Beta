@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { IndianRupee, Sparkles, Eye, Heart } from 'lucide-react';
+import { IndianRupee, Sparkles, Eye, Heart, ArrowUpRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { toggleWatchlist as toggleWatchlistApi } from '../services/api';
+import { openProductInNewTab } from '../utils/productLinks';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onQuickView, onCompareToggle, isCompared = false, onFindSimilar }) => {
     const cardRef = useRef(null);
     const [tilt, setTilt] = useState({ x: 0, y: 0 });
     
@@ -14,6 +15,10 @@ const ProductCard = ({ product }) => {
     const imageUrl = product.image_url || product.image ||
         'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=400';
     const priceLabel = product.price_value || product.price || 0;
+    const normalizedBrand = String(product.brand || '').trim().toLowerCase();
+    const brandLabel = normalizedBrand && normalizedBrand !== 'unknown'
+        ? product.brand
+        : (product.vendor || 'Marketplace');
     
     const handleMouseMove = (e) => {
         if (!cardRef.current) return;
@@ -48,11 +53,36 @@ const ProductCard = ({ product }) => {
         }
     };
 
+    const handleOpenMerchant = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openProductInNewTab(product);
+    };
+
+    const handleQuickView = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onQuickView?.(product);
+    };
+
+    const handleCompare = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onCompareToggle?.(product);
+    };
+
+    const handleFindSimilar = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onFindSimilar?.(product);
+    };
+
     return (
         <div 
             ref={cardRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onClick={() => onQuickView?.(product)}
             style={{
                 transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(1.02, 1.02, 1.02)`,
                 transition: tilt.x === 0 && tilt.y === 0 ? 'all 0.5s ease' : 'none'
@@ -104,8 +134,17 @@ const ProductCard = ({ product }) => {
 
                 {/* Info Layer */}
                 <div className="absolute bottom-8 left-8 right-8 transition-transform duration-500 group-hover:-translate-y-4">
-                    <p className="text-[9px] text-accent uppercase tracking-[0.4em] mb-2 font-black italic">{product.brand}</p>
+                    <p className="text-[9px] text-accent uppercase tracking-[0.4em] mb-2 font-black italic">{brandLabel}</p>
                     <h4 className="font-serif text-xl font-bold text-white mb-4 line-clamp-2 leading-tight drop-shadow-lg">{product.name}</h4>
+                    {product.relevanceChips?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                            {product.relevanceChips.slice(0, 2).map((chip) => (
+                                <span key={chip} className="px-2 py-1 rounded-full bg-white/20 text-white text-[8px] font-black uppercase tracking-wide border border-white/20">
+                                    {chip}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center text-lg font-black text-white">
                             <IndianRupee size={16} className="text-accent" />
@@ -118,12 +157,27 @@ const ProductCard = ({ product }) => {
                 {/* Reveal Specifications Layer */}
                 <div className="absolute inset-x-0 bottom-0 py-10 flex flex-col items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-[0.8s] ease-premium bg-surface/95 backdrop-blur-xl border-t border-premium">
                     <p className="text-[10px] font-black text-muted uppercase tracking-[0.5em] mb-6">Explore Piece</p>
+                    {product.vendorChips?.length > 1 && (
+                        <div className="flex flex-wrap items-center justify-center gap-1 mb-4 px-4">
+                            {product.vendorChips.slice(0, 3).map(vendor => (
+                                <span key={vendor} className="text-[8px] px-2 py-1 rounded-full border border-neutral-300 text-neutral-600 font-black uppercase tracking-wide bg-white">
+                                    {vendor}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                     <div className="flex items-center gap-4 text-main">
                          <span className="w-10 h-px bg-accent/30" />
                          <div className="w-12 h-12 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
                             <Eye size={20} />
                          </div>
                          <span className="w-10 h-px bg-accent/30" />
+                    </div>
+                    <div className="mt-5 grid grid-cols-2 gap-2 px-4 w-full">
+                        <button onClick={handleQuickView} className="py-2 rounded-lg border border-neutral-200 text-[9px] font-black uppercase tracking-wider hover:border-accent hover:text-accent transition-colors">View</button>
+                        <button onClick={handleOpenMerchant} className="py-2 rounded-lg border border-neutral-200 text-[9px] font-black uppercase tracking-wider hover:border-accent hover:text-accent transition-colors flex items-center justify-center gap-1">Open <ArrowUpRight size={12} /></button>
+                        <button onClick={handleCompare} className={`py-2 rounded-lg border text-[9px] font-black uppercase tracking-wider transition-colors ${isCompared ? 'border-accent text-accent bg-accent/5' : 'border-neutral-200 hover:border-accent hover:text-accent'}`}>{isCompared ? 'Compared' : 'Compare'}</button>
+                        <button onClick={handleFindSimilar} className="py-2 rounded-lg border border-neutral-200 text-[9px] font-black uppercase tracking-wider hover:border-accent hover:text-accent transition-colors">Find Similar</button>
                     </div>
                 </div>
             </div>

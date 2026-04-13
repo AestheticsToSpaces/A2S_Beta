@@ -263,6 +263,26 @@ export const SetupModal = ({
 
 export const VastuModal = ({ vastuResult, setVastuResult }) => {
     if (!vastuResult) return null;
+
+    const score = Number.isFinite(Number(vastuResult?.score))
+        ? Number(vastuResult.score)
+        : Number.isFinite(Number(vastuResult?.vastu_score))
+            ? Number(vastuResult.vastu_score)
+            : 0;
+
+    const summary = vastuResult?.summary || vastuResult?.vastu_summary || 'Analysis complete. View details.';
+    const pros = Array.isArray(vastuResult?.pros)
+        ? vastuResult.pros
+        : Array.isArray(vastuResult?.vastu_pros)
+            ? vastuResult.vastu_pros
+            : [];
+    const cons = Array.isArray(vastuResult?.cons)
+        ? vastuResult.cons
+        : Array.isArray(vastuResult?.vastu_cons)
+            ? vastuResult.vastu_cons
+            : [];
+    const renderItemText = (item) => (typeof item === 'string' ? item : item?.text || '');
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
@@ -275,12 +295,12 @@ export const VastuModal = ({ vastuResult, setVastuResult }) => {
                 </div>
                 <div className="overflow-y-auto p-6 text-gray-700 leading-relaxed">
                     <div className="prose prose-sm max-w-none">
-                        <h3 className="text-lg font-bold text-a2s-charcoal mb-2">Overall Score: {vastuResult.score}/10</h3>
-                        <p className="mb-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200 italic">"{vastuResult.summary}"</p>
+                        <h3 className="text-lg font-bold text-a2s-charcoal mb-2">Overall Score: {score}/100</h3>
+                        <p className="mb-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200 italic">"{summary}"</p>
                         <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2"><CheckCircle size={16} /> Positive Aspects</h4>
-                        <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">{vastuResult.pros?.map((pro, i) => <li key={i}>{pro}</li>)}</ul>
+                        <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">{pros.map((pro, i) => <li key={i}>{renderItemText(pro)}</li>)}</ul>
                         <h4 className="font-bold text-red-600 flex items-center gap-2 mb-2"><AlertCircle size={16} /> Suggestions to Improve</h4>
-                        <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">{vastuResult.cons?.map((con, i) => <li key={i}>{con}</li>)}</ul>
+                        <ul className="list-disc pl-5 mb-4 space-y-1 text-sm">{cons.map((con, i) => <li key={i}>{renderItemText(con)}</li>)}</ul>
                     </div>
                 </div>
                 <div className="p-4 bg-gray-50 border-t border-gray-200 text-center">

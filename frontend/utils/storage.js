@@ -125,5 +125,6 @@ export function getInitialFiltersFromOnboarding() {
         maxPrice,
         styles,
         roomTypes,
+        productRoomTypes: [],
     };
 }

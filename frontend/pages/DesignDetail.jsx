@@ -238,13 +238,20 @@ const DesignDetail = () => {
                                     {products.map(product => (
                                         <div key={product.id} className="group flex gap-8 items-center py-4 hover:px-4 hover:bg-accent/5 rounded-3xl transition-all duration-500">
                                             <div className="w-24 h-24 bg-surface rounded-2xl overflow-hidden border border-premium p-2 flex-shrink-0 group-hover:shadow-premium transition-all">
-                                                <img src={product.image} className="w-full h-full object-contain" alt="" />
+                                                <img
+                                                    src={product.image || product.image_url || 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=400'}
+                                                    className="w-full h-full object-contain"
+                                                    alt=""
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=400';
+                                                    }}
+                                                />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div>
                                                         <h4 className="font-serif text-lg font-black italic text-main">{product.name}</h4>
-                                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{product.brand}</p>
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{product.brand && product.brand.toLowerCase() !== 'unknown' ? product.brand : (product.vendor || 'Marketplace')}</p>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 text-main font-black">
                                                         <IndianRupee size={12} className="text-accent" />

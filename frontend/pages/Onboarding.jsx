@@ -38,70 +38,63 @@ const ROOMS = [
     { id: 'kitchen', label: 'Gourmet Kitchen' },
     { id: 'dining', label: 'Dining Area' },
     { id: 'office', label: 'Private Office' },
-    { id: 'home-office', label: 'Lounge Space' },
 ];
 
-// Curated high-quality Unsplash IDs for each combination (Room x Style)
+// Direct image URLs for each combination (Room x Style)
 const STYLE_DATA = {
     'living': {
-        'Minimal': '1618221195710-dd6b41faaea6',
-        'Scandinavian': '1554995207-c18c20360bcb',
-        'Indian Contemporary': '1617103908321-4d1a4441712a',
-        'Mid-Century Modern': '1586023492125-27b2c045efd7',
-        'Luxury': '1616486338812-3dadae4b4f9d',
-        'Boho': '1583847268964-b28dc2f51ac9',
-        'Industrial': '1556912177-c54038c35add'
+        'Minimal': 'https://www.marthastewart.com/thmb/JSJwSMsolMumuoCAHHIjICbzYgs=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/BradRamseyInteriors_credit_CarolineSharpnack-dee35c1fab554898af7c549697c2f592.jpg',
+        'Scandinavian': 'https://online.majuhome.com.my/cdn/shop/articles/scandiblog1big.jpg?v=1632986284',
+        'Indian Contemporary': 'https://thearchitectsdiary.com/wp-content/uploads/2023/01/Prana-Design-Studio-6-1.jpg',
+        'Mid-Century Modern': 'https://cdn.home-designing.com/wp-content/uploads/2024/08/Graceful-Mid-Century-Modern-Living-Rooms.jpg',
+        'Luxury': 'https://germaniaconstruction.com/wp-content/uploads/2022/11/park-city-custom-home-builder-great-room.jpg',
+        'Boho': 'https://hips.hearstapps.com/hmg-prod/images/hbx030118buzz05-66f3009999065.jpg?crop=0.675xw:1.00xh;0.188xw,0&resize=640:*',
+        'Industrial': 'https://www.beautifulhomes.asianpaints.com/content/dam/asianpaintsbeautifulhomes/gallery/living-room/industrial-modern-living-room-with-exposed-brick-wall/sophisticated-living-room-with-chic-accents.jpg.transform/bh-gallery-listing/image.webp'
     },
     'bedroom': {
-        'Minimal': '1566665797739-1674de7a421a',
-        'Scandinavian': '1505691938895-1758d7eaa511',
-        'Indian Contemporary': '1631679706909-1844bbd07221',
-        'Mid-Century Modern': '1598928506311-c55ded91a20c',
-        'Luxury': '1595526114035-0d45ed16cfbf',
-        'Boho': '1522771739844-6a9f6d5f14af',
-        'Industrial': '1536376074432-bf715905548d'
+        'Minimal': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/09d0d7aded4eac7a1b22b7c3f088d54c7036f245.jpg',
+        'Scandinavian': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/9f081b0dd63401646a5e26506952589c156f822f.jpg',
+        'Indian Contemporary': 'https://images.woodenstreet.de/image/data%2FLooks%2F8.jpg',
+        'Mid-Century Modern': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/31a5d0728781afeb9518d5987d77eff1dcbca9a3.jpg',
+        'Luxury': 'https://centuryply.com/blogimage/bedroom_1.png',
+        'Boho': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/d58e036e5a340dd9392b992429f96b04e58b7947.jpg',
+        'Industrial': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/268c97242ce75e9550c42cf33233d22fd24e18c4.jpg'
     },
     'kitchen': {
-        'Minimal': '1556911220-e15b29be8c8f',
-        'Scandinavian': '1484154218962-a197022b5858',
-        'Indian Contemporary': '1539139102642-27613009bc23',
-        'Mid-Century Modern': '1556185731-da3092523298',
-        'Luxury': '1556909114-97e73c671320',
-        'Boho': '1591825729269-caeb9c1259a2',
-        'Industrial': '1543781552-47d3c0fe496c'
+        'Minimal': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/4fc54bbfd0fe9ec3923e5456d8587e543b7afc46.jpg',
+        'Scandinavian': 'https://www.rehome.co.uk/media/wysiwyg/nordic_kitchen.jpg',
+        'Indian Contemporary': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/88dd02a069f6c3bc047264d15788764573fa516f.jpg',
+        'Mid-Century Modern': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/ff8864c35699736ced0726c6155031619a0c9548.jpg',
+        'Luxury': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/5d28887b5981d5315654136fd1562638ee392147.jpg',
+        'Boho': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSofTJfDF2eu98TOdqB_CBnmQ9TcXz96aMfOQ&s',
+        'Industrial': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/d3559db0d6bff31300aec5ccef4b06e13c7454f5.jpg'
     },
     'dining': {
-        'Minimal': '1617806118233-18e1de247200',
-        'Scandinavian': '1538944513123-f365022f716b',
-        'Indian Contemporary': '1615529182904-14819c355ad8',
-        'Mid-Century Modern': '1519643381401-22c77e6e52b9',
-        'Luxury': '1590650516494-0c8e4a4dd67e',
-        'Boho': '1515516089376-88db1e26e9c0',
-        'Industrial': '1590059005315-7b830d1720d2'
+        'Minimal': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/7fc35cc91ddc913945666ef090435c644083a4c4.jpg',
+        'Scandinavian': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/596109fc780a6df8de5f32a1683f35965254a874.jpg',
+        'Indian Contemporary': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/904028665aca0d2217fc3ee57f7fd11d095b1727.jpg',
+        'Mid-Century Modern': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR581MFuD6lLTfJ3-_0ph-DIYakr-ewnS7boQ&s',
+        'Luxury': 'https://i.pinimg.com/736x/6f/b1/21/6fb12197e7be488c070b8fda3801343e.jpg',
+        'Boho': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/aa6d108f85c45a01a48c92cdf0dfe73c65e07438.jpg',
+        'Industrial': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/3e535e382351418a1c6f908f03613272e742a392.jpg'
     },
     'office': {
-        'Minimal': '1524758631624-e2822e304c36',
-        'Scandinavian': '1493934558415-9d19f0b29447',
-        'Indian Contemporary': '1504439468489-c8920d796a29',
-        'Mid-Century Modern': '1517502884482-5c4ef3d75572',
-        'Luxury': '1497362744606-c8959d077b90',
-        'Boho': '1598425237614-47a300366667',
-        'Industrial': '1504384308022-be303a8f8b94'
+        'Minimal': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/a79ccf83871d69da6c6304277607d159a738cf8a.jpg',
+        'Scandinavian': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/e8691be244295b122f4e4ed43828c7246d7d77a6.jpg',
+        'Indian Contemporary': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/d460397c0210bb09ed88d10cf50db59f52b678eb.jpg',
+        'Mid-Century Modern': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/1169fd9dc1a73350089376ba47eea3cea9b2372b.jpg',
+        'Luxury': 'https://pplx-res.cloudinary.com/image/upload/pplx_search_images/a67bc01145e9de208575bc6fcf6758c989eff6fc.jpg',
+        'Boho': 'https://static.asianpaints.com/content/dam/asianpaintsbeautifulhomes/gallery/home-office-design/small-bohemian-home-office-with-wooden-furniture/compact-wooden-office-setup.jpg',
+        'Industrial': 'https://officesnapshots.com/wp-content/uploads/2016/01/cameron-industrial-office-design-3.jpg'
     },
-    'home-office': {
-        'Minimal': '1593642314172-8a9d300cc9e8',
-        'Scandinavian': '1540325983803-5356ec3900dc',
-        'Indian Contemporary': '1616486029377-5264f699119c',
-        'Mid-Century Modern': '1585412726913-39e22496d03f',
-        'Luxury': '1631680327733-dc4370c69464',
-        'Boho': '1594242735140-6f022137996c',
-        'Industrial': '1516062423063-de924314081c'
-    }
 };
 
 const getImageUrl = (room, style) => {
-    const id = STYLE_DATA[room]?.[style] || '1618221195710-dd6b41faaea6';
-    return `https://images.unsplash.com/photo-${id}?q=80&w=800&auto=format&fit=crop`;
+    return STYLE_DATA[room]?.[style] || 'https://picsum.photos/seed/a2s-default/800/1000';
+};
+
+const getFallbackImageUrl = (room, style) => {
+    return `https://picsum.photos/seed/a2s-${room}-${encodeURIComponent(style)}/800/1000`;
 };
 
 const Onboarding = () => {
@@ -205,6 +198,11 @@ const Onboarding = () => {
                                     <img 
                                         src={getImageUrl(currentRoom.id, style.id)} 
                                         alt={style.label}
+                                        onError={(e) => {
+                                            if (e.currentTarget.dataset.fallbackApplied === 'true') return;
+                                            e.currentTarget.dataset.fallbackApplied = 'true';
+                                            e.currentTarget.src = getFallbackImageUrl(currentRoom.id, style.id);
+                                        }}
                                         className="w-full h-full object-cover transition-transform duration-[4s] group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-accent/90 transition-all duration-1000" />

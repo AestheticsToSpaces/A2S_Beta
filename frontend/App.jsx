@@ -12,7 +12,7 @@ const Onboarding = lazy(() => import('./pages/Onboarding'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ThreeDSpace = lazy(() => import('./pages/ThreeDSpace'));
-const VInsight = lazy(() => import('./pages/VInsight'));
+const VastuScore = lazy(() => import('./pages/VastuScore'));
 const Waitlist = lazy(() => import('./pages/Waitlist'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
@@ -59,7 +59,8 @@ const App = () => {
                                 <Route path="/design/:id" element={<ProtectedRoute><DesignDetail /></ProtectedRoute>} />
                                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                                <Route path="/vinsight" element={<ProtectedRoute><VInsight /></ProtectedRoute>} />
+                                <Route path="/vastu-score" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
+                                <Route path="/vinsight" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
                                 <Route path="/3d-space" element={<ProtectedRoute><ThreeDSpace /></ProtectedRoute>} />
                                 <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />

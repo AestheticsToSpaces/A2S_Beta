@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=800';
+
 export default function ImageGallery({ mainImage, gallery = [], title = "Design Detail" }) {
     const images = [mainImage, ...gallery].filter(Boolean);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -19,6 +21,9 @@ export default function ImageGallery({ mainImage, gallery = [], title = "Design 
                     alt={`${title} view ${activeIndex + 1}`}
                     className="w-full h-full object-cover animate-in fade-in zoom-in duration-500"
                     key={activeIndex}
+                    onError={(e) => {
+                        e.currentTarget.src = FALLBACK_IMAGE;
+                    }}
                 />
 
                 {/* Overlay Controls */}
@@ -55,7 +60,14 @@ export default function ImageGallery({ mainImage, gallery = [], title = "Design 
                                     : 'border-transparent hover:border-black/20 hover:scale-105 opacity-60 hover:opacity-100'
                                 }`}
                         >
-                            <img src={img} className="w-full h-full object-cover" alt={`Thumb ${idx}`} />
+                            <img
+                                src={img}
+                                className="w-full h-full object-cover"
+                                alt={`Thumb ${idx}`}
+                                onError={(e) => {
+                                    e.currentTarget.src = FALLBACK_IMAGE;
+                                }}
+                            />
                             {activeIndex === idx && (
                                 <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none" />
                             )}

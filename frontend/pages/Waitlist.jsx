@@ -9,7 +9,7 @@ import { useStore } from '../store/useStore';
 const Waitlist = () => {
     const user = useStore(state => state.user);
     const setWaitlist = useStore(state => state.setWaitlist);
-    const [status, setStatus] = useState({ joined: false, rank: '...', progress: 0, inviteCode: '...' });
+    const [status, setStatus] = useState({ joined: false, rank: '...', inviteCode: '...' });
     const [loading, setLoading] = useState(true);
     const [joining, setJoining] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -104,73 +104,40 @@ const Waitlist = () => {
                         <div className="absolute top-0 right-0 p-8 h-full w-1/2 bg-gradient-to-l from-accent/5 to-transparent pointer-events-none" />
                         
                         {!status.joined ? (
-                            <div className="text-center">
-                                <div className="w-20 h-20 rounded-[32px] bg-accent/10 flex items-center justify-center text-accent mx-auto mb-8 shadow-xl shadow-accent/5">
-                                    <Zap size={40} className="animate-pulse" />
-                                </div>
-                                <h2 className="font-serif text-3xl font-black text-main italic mb-4">Secure Your Spot</h2>
-                                <p className="text-muted mb-10 font-light">
-                                    Join {status.rank} other early adopters. Since you're already a member, one click is all it takes.
-                                </p>
-                                
-                                <button 
-                                    onClick={handleJoin}
-                                    disabled={joining}
-                                    className="w-full btn-premium btn-premium-gold py-6 flex items-center justify-center gap-3 text-lg"
-                                >
-                                    {joining ? 'Adding You...' : 'Join Waitlist Now'}
-                                    {!joining && <ArrowRight size={20} />}
-                                </button>
-                                
-                                <p className="text-[10px] text-muted mt-6 uppercase tracking-[0.2em] font-black">
-                                    Linked to: {user?.email}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-10">
-                                <div>
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className="font-serif text-3xl font-black text-main italic">You're In.</h2>
-                                        <span className="px-4 py-2 rounded-full bg-green-500/10 text-green-500 text-[10px] font-black uppercase tracking-widest border border-green-500/20">Active</span>
-                                    </div>
-                                    <div className="flex justify-between items-end mb-4">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] text-muted uppercase tracking-[0.3em] font-black">Your Position</p>
-                                            <p className="font-serif text-5xl font-black text-main italic">{status.rank}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] text-muted uppercase tracking-[0.3em] font-black">Progress</p>
-                                            <p className="text-3xl font-black text-accent">{status.progress}%</p>
-                                        </div>
-                                    </div>
-                                    <div className="h-2 w-full bg-main/10 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-accent animate-gradient-shift transition-all duration-1000" 
-                                            style={{ width: `${status.progress}%` }}
-                                        />
-                                    </div>
+                            <div className="space-y-4">
+                                <div className="p-7 rounded-[30px] bg-white border border-premium shadow-sm">
+                                    <p className="text-[10px] text-accent uppercase tracking-[0.35em] font-black mb-2">Your Position</p>
+                                    <p className="font-serif text-6xl font-black text-main italic leading-none">{status.rank}</p>
+                                    <p className="text-sm text-muted mt-3">You are currently placed in the active queue for Phase 2 access.</p>
                                 </div>
 
-                                <div className="p-8 rounded-[32px] bg-main/50 border border-premium">
-                                    <p className="text-[10px] text-muted uppercase tracking-[0.3em] font-black mb-4 flex items-center gap-2">
-                                        <Share2 size={12} className="text-accent" />
-                                        Referral System
+                                <div className="p-7 rounded-[30px] bg-main text-white border border-main shadow-lg">
+                                    <p className="text-[10px] uppercase tracking-[0.35em] font-black mb-3 flex items-center gap-2 text-accent">
+                                        <Share2 size={12} />
+                                        Referral Code
                                     </p>
-                                    <div className="flex gap-4 items-center">
-                                        <div className="flex-1 px-6 py-4 rounded-2xl bg-surface border border-premium font-mono text-sm tracking-wider text-main overflow-hidden truncate">
+                                    <div className="flex gap-3 items-center">
+                                        <div className="flex-1 px-5 py-4 rounded-2xl bg-white/10 border border-white/15 font-mono text-base tracking-[0.24em] truncate">
                                             {status.inviteCode}
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={copyInvite}
-                                            className="w-14 h-14 rounded-2xl border border-premium flex items-center justify-center text-muted hover:text-accent hover:border-accent/40 transition-all bg-surface"
+                                            className="w-14 h-14 rounded-2xl border border-white/15 flex items-center justify-center bg-white text-main hover:bg-accent hover:text-white transition-all"
+                                            aria-label="Copy referral code"
                                         >
                                             {copied ? <Check size={20} className="text-green-500" /> : <Copy size={20} />}
                                         </button>
                                     </div>
-                                    <p className="text-[10px] text-muted mt-4 italic font-medium">
-                                        Share your code to climb the waitlist and earn platform credits.
-                                    </p>
+                                    <p className="text-sm text-white/75 mt-3">Share this code if you want referral credit to be applied to your account.</p>
                                 </div>
+
+                                <button
+                                    onClick={handleJoin}
+                                    disabled={joining || status.joined}
+                                    className="w-full px-6 py-4 rounded-2xl bg-accent text-main font-black uppercase tracking-[0.2em] shadow-lg disabled:opacity-60"
+                                >
+                                    {joining ? 'Joining...' : 'Join Waitlist'}
+                                </button>
 
                                 <div className="p-6 rounded-[24px] bg-accent/5 border border-accent/20 flex gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent flex-shrink-0">
@@ -179,9 +146,27 @@ const Waitlist = () => {
                                     <div>
                                         <p className="text-xs font-black text-main uppercase tracking-wider mb-1">Credit System Reminder</p>
                                         <p className="text-[10px] text-muted leading-relaxed">
-                                            Referral credits can be used to renew your <span className="text-main font-bold">AI Consultant</span> sessions. 
+                                            Referral credits can be used to renew your <span className="text-main font-bold">AI Consultant</span> sessions.
                                             Note: <span className="text-main font-bold">Vastu Audit</span> limits are fixed and cannot be increased via referrals.
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="p-7 rounded-[30px] bg-white border border-premium shadow-sm text-center">
+                                    <p className="text-[10px] text-accent uppercase tracking-[0.35em] font-black mb-2">Joined</p>
+                                    <p className="font-serif text-4xl font-black text-main italic leading-tight">You’re in the waitlist</p>
+                                    <p className="text-sm text-muted mt-3">Your position is updated automatically as new seats open.</p>
+                                </div>
+
+                                <div className="p-6 rounded-[24px] bg-accent/5 border border-accent/20 flex gap-4 items-start">
+                                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent flex-shrink-0">
+                                        <Info size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-black text-main uppercase tracking-wider mb-1">Referral Code</p>
+                                        <p className="text-sm text-main font-mono tracking-[0.2em]">{status.inviteCode}</p>
                                     </div>
                                 </div>
                             </div>

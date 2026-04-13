@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 const NAV_LINKS = [
     { to: '/', label: 'Home', authRequired: true },
     { to: '/gallery', label: 'Gallery' },
-    { to: '/vinsight', label: 'VInsight', icon: Sparkles },
+    { to: '/vastu-score', label: 'Vastu Score', icon: Sparkles },
     { to: '/3d-space', label: '3D Space', icon: Box },
     { to: '/dashboard', label: 'Dashboard', authRequired: true },
 ];

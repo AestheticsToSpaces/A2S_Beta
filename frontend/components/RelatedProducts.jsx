@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { IndianRupee } from 'lucide-react';
 
 const RelatedProducts = ({ currentProduct, allProducts, designs, onProductClick }) => {
+    const fallbackImage = 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=400';
+
     // 1. Find products from the same collection (Design)
     const collectionProducts = useMemo(() => {
         const parentDesign = designs.find(d =>
@@ -36,13 +38,16 @@ const RelatedProducts = ({ currentProduct, allProducts, designs, onProductClick 
         >
             <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden mb-3 border border-premium flex items-center justify-center p-4">
                 <img
-                    src={item.image}
+                    src={item.image || item.image_url || fallbackImage}
                     alt={item.name}
                     className="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => {
+                        e.currentTarget.src = fallbackImage;
+                    }}
                 />
             </div>
             <div className="px-1">
-                <span className="block text-[8px] font-black text-accent uppercase tracking-widest mb-1">{item.brand}</span>
+                <span className="block text-[8px] font-black text-accent uppercase tracking-widest mb-1">{String(item.brand || '').trim().toLowerCase() !== 'unknown' && String(item.brand || '').trim() ? item.brand : (item.vendor || 'Marketplace')}</span>
                 <h4 className="text-[10px] font-bold text-main line-clamp-1 mb-1">{item.name}</h4>
                 <div className="flex items-center gap-0.5 text-main font-black">
                     <IndianRupee size={10} className="text-accent" />

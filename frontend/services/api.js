@@ -151,8 +151,9 @@ export const toggleWatchlist = async (productId) => {
 // DESIGNS
 // ============================================
 
-const GALLERY_CACHE_KEY = 'a2s_gallery_cache';
-const PRODUCTS_CACHE_KEY = 'a2s_products_cache';
+const CACHE_VERSION = 'v3';
+const GALLERY_CACHE_KEY = `a2s_gallery_cache_${CACHE_VERSION}`;
+const PRODUCTS_CACHE_KEY = `a2s_products_cache_${CACHE_VERSION}`;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 function readCache(key) {
@@ -183,11 +184,15 @@ export const getDesigns = async () => {
 
 export const getDesignsCached = () => readCache(GALLERY_CACHE_KEY);
 
-export const getProducts = async () => {
+export const getProducts = async (page = 0, size = 200) => {
     try {
-        const response = await api.get('/products');
-        const data = response.data || [];
-        writeCache(PRODUCTS_CACHE_KEY, data);
+        const safeSize = Math.min(Math.max(Number(size) || 200, 1), 200);
+        const response = await api.get(`/products?page=${page}&size=${safeSize}`);
+        const data = response.data || { items: [], total: 0, hasMore: false };
+        // Cache only the items array for backward compatibility
+        if (page === 0) {
+            writeCache(PRODUCTS_CACHE_KEY, data.items);
+        }
         return data;
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -196,6 +201,16 @@ export const getProducts = async () => {
 };
 
 export const getProductsCached = () => readCache(PRODUCTS_CACHE_KEY);
+
+export const getProductInsights = async (productId) => {
+    try {
+        const response = await api.get(`/products/${productId}/insights`);
+        return response.data || { priceAcrossPlatforms: [], similarProducts: [] };
+    } catch (error) {
+        console.error('Error fetching product insights:', error);
+        return { priceAcrossPlatforms: [], similarProducts: [] };
+    }
+};
 
 export const getDesignById = async (id) => {
     try {
@@ -230,6 +245,38 @@ export const performVastuAudit = async (formData) => {
         return response.data;
     } catch (error) {
         throw error.response?.data?.message || 'Vastu audit failed';
+    }
+};
+
+export const getVastuScoreStatus = async () => {
+    try {
+        const response = await api.get('/vastu/status');
+        return response.data;
+    } catch (error) {
+        throw error.response?.data?.message || 'Failed to fetch Vastu scan status';
+    }
+};
+
+export const analyseVastuScore = async (formData) => {
+    try {
+        const response = await api.post('/vastu/analyse', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Vastu score analysis failed' };
+    }
+};
+
+export const trackVastuCatalogClick = async (payload) => {
+    try {
+        const response = await api.post('/vastu/catalog-click', payload);
+        return response.data;
+    } catch (error) {
+        // Non-blocking analytics event.
+        return { success: false, message: error.response?.data?.message || 'click tracking failed' };
     }
 };
 // ============================================

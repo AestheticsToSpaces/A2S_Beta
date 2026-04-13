@@ -17,22 +17,9 @@ import { getInitialFiltersFromOnboarding } from '../utils/storage';
 import { getDesigns, getProducts, getDesignsCached, getProductsCached } from '../services/api';
 import { openProductInNewTab } from '../utils/productLinks';
 
-// Animated counter hook
-function useCountUp(target, duration = 1200) {
-    const [count, setCount] = useState(0);
-    useEffect(() => {
-        if (!target) return;
-        let start = 0;
-        const increment = target / (duration / 16);
-        const timer = setInterval(() => {
-            start += increment;
-            if (start >= target) { setCount(target); clearInterval(timer); }
-            else setCount(Math.floor(start));
-        }, 16);
-        return () => clearInterval(timer);
-    }, [target, duration]);
-    return count;
-}
+const PRODUCTS_PAGE_SIZE = 200;
+const INITIAL_VISIBLE_ITEMS = 24;
+const LOAD_MORE_STEP = 24;
 
 const Gallery = () => {
     const [filters, setFilters] = useState(() => getInitialFiltersFromOnboarding());
@@ -48,8 +35,37 @@ const Gallery = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState('all');
     const [isSortOpen, setIsSortOpen] = useState(false);
+    const [compareProducts, setCompareProducts] = useState([]);
+    const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_ITEMS);
+    const [isCatalogSyncing, setIsCatalogSyncing] = useState(false);
     const heroRef = useRef(null);
     const [heroScrolled, setHeroScrolled] = useState(false);
+
+    const normalizeRoomType = useCallback((value) => {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const key = raw.toLowerCase().replace(/_/g, ' ').trim();
+        const map = {
+            'living room': 'Living Room',
+            'livingroom': 'Living Room',
+            'living': 'Living Room',
+            'bedroom': 'Bedroom',
+            'master bedroom': 'Bedroom',
+            'guest bedroom': 'Bedroom',
+            'dining': 'Dining Room',
+            'dining room': 'Dining Room',
+            'kitchen': 'Kitchen',
+            'office': 'Home Office',
+            'home office': 'Home Office',
+            'home-office': 'Home Office',
+            'study': 'Home Office',
+            'bathroom': 'Bathroom',
+            'balcony': 'Balcony',
+            'pooja room': 'Pooja Room',
+            'pooja': 'Pooja Room',
+        };
+        return map[key] || raw.replace(/\b\w/g, ch => ch.toUpperCase());
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -68,20 +84,80 @@ const Gallery = () => {
         try {
             const cachedDesigns = getDesignsCached();
             const cachedProducts = getProductsCached();
-            const hasCache = cachedDesigns?.length > 0 || cachedProducts?.length > 0;
+            const safeCachedDesigns = Array.isArray(cachedDesigns) ? cachedDesigns : [];
+            const safeCachedProducts = Array.isArray(cachedProducts)
+                ? cachedProducts.slice(0, PRODUCTS_PAGE_SIZE)
+                : [];
+            const hasCache = safeCachedDesigns.length > 0 || safeCachedProducts.length > 0;
 
             if (hasCache) {
-                setDesigns(cachedDesigns || []);
-                setStandaloneProducts(cachedProducts || []);
+                setDesigns(safeCachedDesigns);
+                setStandaloneProducts(safeCachedProducts);
                 setIsLoading(false);
             } else {
                 setIsLoading(true);
             }
             setError(null);
+            setIsCatalogSyncing(false);
 
-            const [designsData, productsData] = await Promise.all([getDesigns(), getProducts()]);
+            // Fetch designs immediately
+            const designsData = await getDesigns();
             setDesigns(designsData);
-            setStandaloneProducts(productsData);
+            setIsLoading(false);
+
+            // Fetch only first page initially; remaining pages are loaded explicitly via button.
+            const productsResponse = await getProducts(0, PRODUCTS_PAGE_SIZE);
+            const firstItems = productsResponse.items || productsResponse || [];
+            const seenIds = new Set();
+            const uniqueProducts = [];
+            firstItems.forEach((item) => {
+                if (!seenIds.has(item.id)) {
+                    seenIds.add(item.id);
+                    uniqueProducts.push(item);
+                }
+            });
+            setStandaloneProducts(uniqueProducts);
+
+            // Keep loading the remaining catalog pages in background so filters have full coverage.
+            const preloadFullCatalog = async () => {
+                setIsCatalogSyncing(true);
+                let page = 1;
+                let hasMore = Boolean(productsResponse.hasMore) || firstItems.length >= PRODUCTS_PAGE_SIZE;
+                const merged = [...uniqueProducts];
+
+                while (hasMore && page < 500) {
+                    const response = await getProducts(page, PRODUCTS_PAGE_SIZE);
+                    const pageItems = response.items || response || [];
+
+                    if (!pageItems.length) {
+                        break;
+                    }
+
+                    pageItems.forEach((item) => {
+                        if (!seenIds.has(item.id)) {
+                            seenIds.add(item.id);
+                            merged.push(item);
+                        }
+                    });
+
+                    // Periodically publish progress so filters update as data arrives.
+                    if (page % 2 === 0) {
+                        setStandaloneProducts([...merged]);
+                        await new Promise((resolve) => setTimeout(resolve, 0));
+                    }
+
+                    hasMore = Boolean(response.hasMore) || pageItems.length >= PRODUCTS_PAGE_SIZE;
+                    page += 1;
+                }
+
+                setStandaloneProducts(merged);
+                setIsCatalogSyncing(false);
+            };
+
+            preloadFullCatalog().catch((syncErr) => {
+                console.warn('Catalog background sync failed:', syncErr);
+                setIsCatalogSyncing(false);
+            });
         } catch (err) {
             console.error('Failed to fetch gallery data:', err);
             if (!designs.length && !standaloneProducts.length) {
@@ -153,15 +229,105 @@ const Gallery = () => {
                 const targetCategory = dynamicCategories.find(c => c.id === activeCategory);
                 const matchesCategory = activeCategory === 'all' || (product.category?.toLowerCase().includes(targetCategory?.filter?.toLowerCase() || ''));
                 const matchesFilterRoom = !filters.roomTypes?.length || filters.roomTypes.some(cat => (product.category || '').toLowerCase().includes(cat.toLowerCase()) || (product.name || '').toLowerCase().includes(cat.toLowerCase()));
+                const normalizedProductRoom = normalizeRoomType(product.roomType);
+                const matchesProductRoomType = !filters.productRoomTypes?.length || filters.productRoomTypes.some(room => {
+                    const normalizedFilterRoom = normalizeRoomType(room);
+                    return normalizedProductRoom === normalizedFilterRoom;
+                });
                 const matchesSearch = !query || (product.name || '').toLowerCase().includes(query) || (product.brand || '').toLowerCase().includes(query);
-                return matchesPrice && matchesCategory && matchesSearch && matchesFilterRoom;
+                return matchesPrice && matchesCategory && matchesSearch && matchesFilterRoom && matchesProductRoomType;
             });
             return [...results].sort((a, b) => sortBy === 'price-low' ? a.price - b.price : sortBy === 'price-high' ? b.price - a.price : 0);
         }
-    }, [designs, furnitureItems, filters, sortBy, searchQuery, viewType, activeCategory, dynamicCategories]);
+    }, [designs, furnitureItems, filters, sortBy, searchQuery, viewType, activeCategory, dynamicCategories, normalizeRoomType]);
+
+    const furnitureMedianPrice = useMemo(() => {
+        const prices = (filteredItems || []).map(p => Number(p.price || 0)).filter(v => v > 0).sort((a, b) => a - b);
+        if (!prices.length) return 0;
+        const mid = Math.floor(prices.length / 2);
+        return prices.length % 2 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+    }, [filteredItems]);
+
+    const displayFurnitureItems = useMemo(() => {
+        if (viewType !== 'furniture') return [];
+        const groups = new Map();
+
+        const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+        filteredItems.forEach((item) => {
+            const category = normalize(item.category);
+            const name = normalize(item.name || item.product_name)
+                .replace(/\b(ikea|amazon|amazon in|flipkart|wooden street|woodenstreet|pepperfry|urban ladder|urbanladder)\b/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const key = `${category}|${name}`;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(item);
+        });
+
+        return Array.from(groups.values()).map((items) => {
+            const sorted = [...items].sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+            const primary = { ...sorted[0] };
+            const vendors = [...new Set(sorted.map(i => i.vendor).filter(Boolean))];
+            const chips = [];
+
+            if (primary.price && furnitureMedianPrice && Number(primary.price) <= furnitureMedianPrice) {
+                chips.push('Best value');
+            }
+            if (filters.styles?.length && String(primary.aestheticStyle || primary.style || '').toLowerCase().includes(String(filters.styles[0]).toLowerCase())) {
+                chips.push('Matches your style');
+            }
+            if (vendors.length > 1) {
+                chips.push('Cross-vendor match');
+            }
+
+            return {
+                ...primary,
+                groupedItems: sorted,
+                vendorChips: vendors,
+                duplicateCount: sorted.length,
+                relevanceChips: chips,
+            };
+        }).sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    }, [filteredItems, viewType, filters.styles, furnitureMedianPrice]);
+
+    const currentItems = viewType === 'furniture' ? displayFurnitureItems : filteredItems;
+    const visibleItems = useMemo(
+        () => currentItems.slice(0, visibleCount),
+        [currentItems, visibleCount]
+    );
+
+    useEffect(() => {
+        setVisibleCount(INITIAL_VISIBLE_ITEMS);
+    }, [viewType, searchQuery, filters, activeCategory, sortBy]);
+
+    const handleGalleryLoadMore = useCallback(async () => {
+        setVisibleCount((prev) => Math.min(prev + LOAD_MORE_STEP, currentItems.length));
+    }, [currentItems.length]);
+
+    const handleCompareToggle = useCallback((product) => {
+        setCompareProducts((prev) => {
+            const exists = prev.some((p) => p.id === product.id);
+            if (exists) return prev.filter((p) => p.id !== product.id);
+            if (prev.length >= 3) return [...prev.slice(1), product];
+            return [...prev, product];
+        });
+    }, []);
+
+    const handleFindSimilar = useCallback((product) => {
+        const firstWords = String(product.name || '').split(' ').slice(0, 2).join(' ');
+        setSearchQuery(firstWords);
+        setActiveCategory('all');
+    }, []);
+
+    useEffect(() => {
+        if (viewType !== 'furniture' && compareProducts.length) {
+            setCompareProducts([]);
+        }
+    }, [viewType, compareProducts.length]);
 
     const filterCounts = useMemo(() => {
-        const counts = { rooms: {}, styles: {} };
+        const counts = { rooms: {}, styles: {}, productRooms: {} };
         designs.forEach(d => {
             const room = d.roomType;
             const style = d.style;
@@ -170,18 +336,16 @@ const Gallery = () => {
         });
         furnitureItems.forEach(p => {
             const cat = p.category;
+            const roomType = normalizeRoomType(p.roomType);
             if (cat) counts.rooms[cat] = (counts.rooms[cat] || 0) + 1;
+            if (roomType) counts.productRooms[roomType] = (counts.productRooms[roomType] || 0) + 1;
         });
         return counts;
-    }, [designs, furnitureItems]);
+    }, [designs, furnitureItems, normalizeRoomType]);
 
     const styleCount = useMemo(() => new Set(designs.map(d => d.style).filter(Boolean)).size, [designs]);
 
-    const designCountNum = useCountUp(designs.length);
-    const productCountNum = useCountUp(standaloneProducts.length);
-    const styleCountNum = useCountUp(styleCount);
-
-    const activeFilterCount = (filters.roomTypes?.length || 0) + (filters.styles?.length || 0) + (filters.maxPrice < 200000 ? 1 : 0);
+    const activeFilterCount = (filters.roomTypes?.length || 0) + (filters.productRoomTypes?.length || 0) + (filters.styles?.length || 0) + (filters.maxPrice < 200000 ? 1 : 0);
 
     const trendingSearches = useMemo(() => {
         const tags = designs.flatMap(d => d.tags || []);
@@ -272,7 +436,7 @@ const Gallery = () => {
                         </button>
 
                         <div className="px-5 py-4 rounded-full text-[10px] font-black uppercase tracking-widest text-muted italic whitespace-nowrap">
-                            <span className="text-accent">{filteredItems.length}</span> found
+                            Curated results
                         </div>
                     </div>
                 </div>
@@ -294,6 +458,26 @@ const Gallery = () => {
                     </div>
                 )}
 
+                {viewType === 'furniture' && compareProducts.length > 0 && (
+                    <div className="mb-8 p-5 rounded-3xl bg-white border border-premium shadow-premium animate-fade-in-up">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-main">Compare Items</h3>
+                            <button onClick={() => setCompareProducts([])} className="text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-accent transition-colors">Clear</button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {compareProducts.map((item) => (
+                                <div key={item.id} className="p-4 rounded-2xl border border-neutral-200 bg-neutral-50">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">{item.vendor || 'Marketplace'}</p>
+                                    <p className="text-sm font-black text-main mb-2 line-clamp-2">{item.name}</p>
+                                    <p className="text-xs font-bold text-neutral-600">Price: ₹{Number(item.price || 0).toLocaleString('en-IN')}</p>
+                                    <p className="text-xs font-bold text-neutral-600">Material: {item.material || 'Premium'}</p>
+                                    <p className="text-xs font-bold text-neutral-600">Dimensions: {item.dimensions || 'Hand-measured'}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {isLoading ? (
                     <div className={`grid gap-10 ${viewType === 'rooms' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
                         {Array.from({ length: 8 }).map((_, i) => (
@@ -311,14 +495,30 @@ const Gallery = () => {
                         <p className="text-neutral-400 mb-10 max-w-sm mx-auto">{error}</p>
                         <button onClick={() => fetchData()} className="btn-premium btn-premium-gold px-12 py-5 shadow-lg">Try Again</button>
                     </div>
-                ) : filteredItems.length > 0 ? (
+                ) : currentItems.length > 0 ? (
+                    <>
                     <div className={`grid gap-10 ${viewType === 'rooms' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
-                        {filteredItems.map((item, index) =>
+                        {visibleItems.map((item, index) =>
                             viewType === 'rooms'
                                 ? <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className="animate-fade-in-up"><DesignCard design={item} onQuickPreview={setPreviewItem} /></div>
-                                : <div key={item.id} style={{ animationDelay: `${index * 0.04}s` }} className="animate-fade-in-up" onClick={() => setPreviewItem(item)}><ProductCard product={item} /></div>
+                                : <div key={item.id} style={{ animationDelay: `${index * 0.04}s` }} className="animate-fade-in-up"><ProductCard product={item} onQuickView={setPreviewItem} onCompareToggle={handleCompareToggle} isCompared={compareProducts.some(p => p.id === item.id)} onFindSimilar={handleFindSimilar} /></div>
                         )}
                     </div>
+                    {(visibleItems.length < currentItems.length || (viewType === 'furniture' && isCatalogSyncing)) && (
+                        <div className="mt-12 flex justify-center">
+                            <button
+                                type="button"
+                                onClick={handleGalleryLoadMore}
+                                disabled={isCatalogSyncing && visibleItems.length >= currentItems.length}
+                                className="btn-premium btn-premium-outline px-10 py-4 shadow-lg"
+                            >
+                                {visibleItems.length < currentItems.length
+                                    ? `Load more (${currentItems.length - visibleItems.length} remaining)`
+                                    : (isCatalogSyncing ? 'Syncing full catalog...' : 'All items loaded')}
+                            </button>
+                        </div>
+                    )}
+                    </>
                 ) : (
                     <div className="py-48 text-center glass-premium rounded-[64px] border-2 border-dashed border-neutral-100 max-w-4xl mx-auto">
                         <div className="w-24 h-24 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-8 text-neutral-300 border border-neutral-100 animate-pulse">
