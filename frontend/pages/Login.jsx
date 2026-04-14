@@ -90,11 +90,13 @@ const Login = () => {
     };
 
     const handleGoogleLogin = () => {
-        window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/oauth2/authorization/google`;
+        const oauthBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+        window.location.href = `${oauthBaseUrl}/oauth2/authorization/google`;
     };
 
     const handleAppleLogin = () => {
-        window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/oauth2/authorization/apple`;
+        const oauthBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+        window.location.href = `${oauthBaseUrl}/oauth2/authorization/apple`;
     };
 
     const handleSubmit = async (e) => {
