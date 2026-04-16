@@ -58,10 +58,19 @@ jobs:
               OAUTH2_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/#/login" \
               GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
               GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+              SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/login/oauth2/code/google" \
               LLM_SERVICE_URL="https://a2s-llm.internal.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
               GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
               GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
+
+      - name: Route backend traffic to latest revision
+        run: |
+          az containerapp ingress traffic set \
+            --name a2s-backend \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --revision-weight latest=100
 
       - name: Deploy LLM
         run: |
