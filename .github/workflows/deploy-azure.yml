@@ -80,6 +80,10 @@ jobs:
               JWT_EXPIRATION="86400000" \
               CORS_ORIGINS="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
               OAUTH2_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/#/dashboard" \
+              GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+              SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/login/oauth2/code/google" \
               LLM_SERVICE_URL="https://a2s-llm.internal.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
               GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
