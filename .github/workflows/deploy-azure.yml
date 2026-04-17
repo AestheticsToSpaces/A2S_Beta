@@ -29,6 +29,24 @@ jobs:
       - name: Login to ACR
         run: az acr login --name ${{ env.ACR_NAME }}
 
+      - name: Recover backend routing early
+        run: |
+          az containerapp ingress enable \
+            --name a2s-backend \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --type external \
+            --target-port 8080 || true
+
+          az containerapp ingress traffic set \
+            --name a2s-backend \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --revision-weight latest=100 || true
+
+          az containerapp revision set-mode \
+            --name a2s-backend \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --mode single || true
+
       - name: Build & push frontend image (priority)
         run: |
           docker build -t ${{ env.ACR_LOGIN_SERVER }}/a2s-frontend:${{ env.IMAGE_TAG }} ./frontend
