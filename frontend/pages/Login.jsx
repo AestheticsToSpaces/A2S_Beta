@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
     Mail, User, MapPin, ArrowRight, Sparkles, Lock, 
-    Eye, EyeOff, CheckCircle2, Chrome, Apple, Command,
+    Eye, EyeOff, CheckCircle2, Chrome, Command,
     LogIn, UserPlus
 } from 'lucide-react';
 import { login, register } from '../services/api';
@@ -92,11 +92,6 @@ const Login = () => {
     const handleGoogleLogin = () => {
         const oauthBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
         window.location.href = `${oauthBaseUrl}/oauth2/authorization/google`;
-    };
-
-    const handleAppleLogin = () => {
-        const oauthBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-        window.location.href = `${oauthBaseUrl}/oauth2/authorization/apple`;
     };
 
     const handleSubmit = async (e) => {
@@ -395,16 +390,9 @@ const Login = () => {
                                  <button
                                      type="button"
                                      onClick={handleGoogleLogin}
-                                     className="flex-1 flex items-center justify-center gap-3 py-4 rounded-xl border border-premium bg-offset text-main text-sm font-bold uppercase tracking-wider transition-all duration-300 hover:border-accent/30 hover:shadow-md active:scale-95"
+                                     className="w-full flex items-center justify-center gap-3 py-4 rounded-xl border border-premium bg-offset text-main text-sm font-bold uppercase tracking-wider transition-all duration-300 hover:border-accent/30 hover:shadow-md active:scale-95"
                                  >
                                      <Chrome size={18} /> Google
-                                 </button>
-                                 <button
-                                     type="button"
-                                     onClick={handleAppleLogin}
-                                     className="flex-1 flex items-center justify-center gap-3 py-4 rounded-xl border border-premium bg-offset text-main text-sm font-bold uppercase tracking-wider transition-all duration-300 hover:border-accent/30 hover:shadow-md active:scale-95"
-                                 >
-                                     <Apple size={18} /> Apple
                                  </button>
                              </div>
 
