@@ -45,7 +45,7 @@ jobs:
               JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               JWT_EXPIRATION="86400000" \
               CORS_ORIGINS="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
-              OAUTH2_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/#/login" \
+              OAUTH2_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/#/dashboard" \
               GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
               GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
@@ -54,16 +54,6 @@ jobs:
               LLM_SERVICE_URL="https://a2s-llm.internal.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
               GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
               GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
-
-          latest_revision=$(az containerapp show \
-            --name a2s-backend \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --query properties.latestRevisionName \
-            -o tsv)
-          az containerapp revision activate \
-            --name a2s-backend \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --revision "$latest_revision"
 
       - name: Build & push LLM image
         run: |

@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-d
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
+import { useStore } from './store/useStore';
 
 // Lazy-loaded pages for route-based code splitting
 const Home = lazy(() => import('./pages/Home'));
@@ -27,6 +28,34 @@ const ScrollToTop = () => {
     return null;
 };
 
+// Accept OAuth token from query/hash on any route, then normalize to dashboard.
+const OAuthTokenBootstrap = () => {
+    const { search, hash } = useLocation();
+    const isAuthenticated = useStore((state) => state.isAuthenticated);
+
+    useEffect(() => {
+        const routerQueryToken = new URLSearchParams(search).get('token');
+        const urlQueryToken = new URLSearchParams(window.location.search).get('token');
+
+        let hashQueryToken = null;
+        if (hash.includes('?')) {
+            const hashQuery = hash.split('?')[1] || '';
+            hashQueryToken = new URLSearchParams(hashQuery).get('token');
+        }
+
+        const token = routerQueryToken || urlQueryToken || hashQueryToken;
+        if (!token || isAuthenticated) {
+            return;
+        }
+
+        localStorage.setItem('token', token);
+        useStore.getState().login({}, token);
+        window.location.replace('/#/dashboard');
+    }, [search, hash, isAuthenticated]);
+
+    return null;
+};
+
 import AIStylistWidget from './components/AIStylistWidget';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -46,6 +75,7 @@ const App = () => {
         <ErrorBoundary>
             <Router>
                 <ScrollToTop />
+                <OAuthTokenBootstrap />
                 <div className="flex flex-col min-h-screen">
                     <Navbar />
                     <main className="flex-grow">
