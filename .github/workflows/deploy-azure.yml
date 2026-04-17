@@ -55,6 +55,13 @@ jobs:
               GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
               GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
 
+          # Ensure backend remains reachable via ACA FQDN after each revision update.
+          az containerapp ingress enable \
+            --name a2s-backend \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --type external \
+            --target-port 8080 || true
+
           # Safety net: recover from stale/no-traffic backend revision states without
           # breaking deployment if a command is unsupported in the current CLI profile.
           az containerapp ingress traffic set \
