@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: deploy-azure-main
+  cancel-in-progress: true
+
 env:
   RESOURCE_GROUP: a2ws
   ACR_NAME: a2sacr
