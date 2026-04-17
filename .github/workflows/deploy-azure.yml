@@ -32,21 +32,6 @@ jobs:
 
       - name: Deploy backend
         run: |
-          GOOGLE_CLIENT_ID_VALUE="${{ secrets.GOOGLE_CLIENT_ID }}"
-          GOOGLE_CLIENT_SECRET_VALUE="${{ secrets.GOOGLE_CLIENT_SECRET }}"
-
-          if [ -z "$GOOGLE_CLIENT_ID_VALUE" ]; then
-            GOOGLE_CLIENT_ID_VALUE="${{ vars.GOOGLE_CLIENT_ID }}"
-          fi
-          if [ -z "$GOOGLE_CLIENT_SECRET_VALUE" ]; then
-            GOOGLE_CLIENT_SECRET_VALUE="${{ vars.GOOGLE_CLIENT_SECRET }}"
-          fi
-
-          if [ -z "$GOOGLE_CLIENT_ID_VALUE" ] || [ -z "$GOOGLE_CLIENT_SECRET_VALUE" ]; then
-            echo "Google OAuth credentials are missing in both GitHub Secrets and Repository Variables."
-            exit 1
-          fi
-
           az containerapp update \
             --name a2s-backend \
             --resource-group ${{ env.RESOURCE_GROUP }} \
@@ -61,10 +46,6 @@ jobs:
               JWT_EXPIRATION="86400000" \
               CORS_ORIGINS="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
               OAUTH2_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/#/dashboard" \
-              GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID_VALUE" \
-              GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET_VALUE" \
-              SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID_VALUE" \
-              SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET_VALUE" \
               SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI="https://a2s-frontend.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io/login/oauth2/code/google" \
               LLM_SERVICE_URL="https://a2s-llm.internal.wonderfuldesert-13f722e8.centralindia.azurecontainerapps.io" \
               GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
