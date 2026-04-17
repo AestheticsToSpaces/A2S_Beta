@@ -55,6 +55,18 @@ jobs:
               GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
               GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
 
+          # Safety net: recover from stale/no-traffic backend revision states without
+          # breaking deployment if a command is unsupported in the current CLI profile.
+          az containerapp ingress traffic set \
+            --name a2s-backend \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --revision-weight latest=100 || true
+
+          az containerapp revision set-mode \
+            --name a2s-backend \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --mode single || true
+
       - name: Build & push LLM image
         run: |
           docker build -t ${{ env.ACR_LOGIN_SERVER }}/a2s-llm:${{ env.IMAGE_TAG }} ./LLM
