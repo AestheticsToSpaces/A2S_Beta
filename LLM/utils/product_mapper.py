@@ -67,6 +67,39 @@ PRODUCT_TYPE_TO_ROOM_MAPPING = {
     "rug": ["Living Room", "Bedroom", "Dining Room"],
     "curtain": ["Living Room", "Bedroom", "Study"],
     
+    # Drawing Room (formal Indian guest reception space)
+    "drawing_room_sofa": ["Drawing Room"],
+    "display_cabinet": ["Drawing Room", "Living Room"],
+    "console_table": ["Drawing Room", "Entryway", "Living Room"],
+    "accent_chair": ["Drawing Room", "Living Room", "Bedroom"],
+    "show_piece": ["Drawing Room", "Living Room", "Pooja Room"],
+
+    # Appliances
+    "appliance": ["Living Room", "Kitchen", "Bedroom"],
+    "tv": ["Living Room", "Bedroom", "Drawing Room"],
+    "ac": ["Living Room", "Bedroom", "Drawing Room", "Study"],
+    "refrigerator": ["Kitchen"],
+    "microwave": ["Kitchen"],
+    "dishwasher": ["Kitchen"],
+    "water_purifier": ["Kitchen"],
+
+    # Kitchen accessories
+    "kitchen_accessory": ["Kitchen"],
+    "pressure_cooker": ["Kitchen"],
+    "cookware": ["Kitchen"],
+    "kadhai": ["Kitchen"],
+    "cutting_board": ["Kitchen"],
+
+    # Outdoor / Balcony
+    "outdoor": ["Balcony"],
+    "bistro_set": ["Balcony"],
+    "hammock": ["Balcony"],
+    "planter": ["Balcony", "Living Room", "Bedroom"],
+    "outdoor_chair": ["Balcony"],
+    "outdoor_table": ["Balcony"],
+    "outdoor_rug": ["Balcony"],
+    "fairy_lights": ["Balcony", "Bedroom", "Living Room"],
+
     # Misc/Default
     "misc": ["Living Room"],
 }
@@ -76,12 +109,14 @@ VALID_ROOM_TYPES = [
     "Bedroom",
     "Kitchen",
     "Dining Room",
+    "Drawing Room",
     "Study",
     "Pooja Room",
     "Bathroom",
     "Entryway",
     "Home Office",
     "Kids Room",
+    "Balcony",
 ]
 
 

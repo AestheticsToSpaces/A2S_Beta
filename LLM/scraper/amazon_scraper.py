@@ -52,6 +52,34 @@ AMAZON_SEARCHES = {
         "https://www.amazon.in/s?k=wardrobe+for+bedroom&i=furniture",
         "https://www.amazon.in/s?k=tv+unit+for+living+room&i=furniture",
     ],
+    "drawing_room": [
+        "https://www.amazon.in/s?k=accent+chair+for+living+room&i=furniture",
+        "https://www.amazon.in/s?k=display+cabinet+showcase+for+home&i=furniture",
+        "https://www.amazon.in/s?k=console+table+for+entryway&i=furniture",
+        "https://www.amazon.in/s?k=show+piece+for+home+decoration&i=furniture",
+    ],
+    "appliance": [
+        "https://www.amazon.in/s?k=smart+tv+43+inch&i=electronics",
+        "https://www.amazon.in/s?k=split+ac+1.5+ton+5+star&i=appliances",
+        "https://www.amazon.in/s?k=double+door+refrigerator&i=appliances",
+        "https://www.amazon.in/s?k=microwave+oven+solo&i=appliances",
+        "https://www.amazon.in/s?k=ro+water+purifier&i=appliances",
+    ],
+    "kitchen_accessory": [
+        "https://www.amazon.in/s?k=pressure+cooker+stainless+steel&i=kitchen",
+        "https://www.amazon.in/s?k=non+stick+kadhai+set&i=kitchen",
+        "https://www.amazon.in/s?k=cutting+board+set&i=kitchen",
+        "https://www.amazon.in/s?k=stainless+steel+bowl+set&i=kitchen",
+        "https://www.amazon.in/s?k=kitchen+utensils+set&i=kitchen",
+    ],
+    "outdoor": [
+        "https://www.amazon.in/s?k=balcony+bistro+set+chairs+table",
+        "https://www.amazon.in/s?k=outdoor+garden+chair+foldable",
+        "https://www.amazon.in/s?k=hammock+for+home+balcony",
+        "https://www.amazon.in/s?k=planter+pots+for+balcony",
+        "https://www.amazon.in/s?k=fairy+lights+for+balcony+outdoor",
+        "https://www.amazon.in/s?k=outdoor+rug+mat+for+balcony",
+    ],
 }
 
 

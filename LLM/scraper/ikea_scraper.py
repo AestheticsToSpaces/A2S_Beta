@@ -36,6 +36,9 @@ IKEA_SEARCH_QUERIES = {
     "decor": ["mirror", "clock", "vase", "picture frame", "candle holder", "artificial plant", "cushion cover"],
     "chair": ["dining chair", "office chair", "stool", "bench", "rocking chair"],
     "textile": ["curtain", "rug", "throw blanket", "bedspread", "towel set"],
+    "drawing_room": ["accent chair", "display cabinet", "show piece", "wall art frame", "decorative tray", "occasional table"],
+    "kitchen_accessory": ["frying pan", "cooking pot", "knife set", "cutting board", "mixing bowl", "colander", "spatula set", "storage jar"],
+    "outdoor": ["outdoor chair", "garden furniture", "outdoor table", "planter pot", "outdoor rug", "balcony set", "folding chair"],
 }
 
 IKEA_API_BASE = "https://sik.search.blue.cdtapps.com/in/en/search-result-page"

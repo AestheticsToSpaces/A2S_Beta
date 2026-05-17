@@ -24,23 +24,45 @@ from utils.product_mapper import map_product_type_to_room_types
 URBAN_LADDER_SEARCHES = {
     "sofa": [
         "https://www.urbanladder.com/sofas",
+        "https://www.urbanladder.com/recliners",
+        "https://www.urbanladder.com/sofa-cum-beds",
     ],
     "bed": [
         "https://www.urbanladder.com/beds",
+        "https://www.urbanladder.com/bunk-beds",
     ],
     "table": [
         "https://www.urbanladder.com/coffee-tables",
         "https://www.urbanladder.com/dining-tables",
+        "https://www.urbanladder.com/console-tables",
+        "https://www.urbanladder.com/side-tables",
     ],
     "storage": [
         "https://www.urbanladder.com/bookshelves",
         "https://www.urbanladder.com/wardrobes",
+        "https://www.urbanladder.com/shoe-racks",
     ],
     "lighting": [
         "https://www.urbanladder.com/lighting",
+        "https://www.urbanladder.com/floor-lamps",
+        "https://www.urbanladder.com/table-lamps",
     ],
     "decor": [
         "https://www.urbanladder.com/home-decor",
+        "https://www.urbanladder.com/mirrors",
+        "https://www.urbanladder.com/wall-decor",
+    ],
+    "chair": [
+        "https://www.urbanladder.com/dining-chairs",
+        "https://www.urbanladder.com/accent-chairs",
+        "https://www.urbanladder.com/study-chairs",
+    ],
+    "drawing_room": [
+        "https://www.urbanladder.com/display-units",
+        "https://www.urbanladder.com/accent-chairs",
+    ],
+    "outdoor": [
+        "https://www.urbanladder.com/outdoor-furniture",
     ],
 }
 
@@ -115,20 +137,33 @@ def scrape_urbanladder(max_per_category: int = 200) -> list[dict]:
 
     for product_type, urls in URBAN_LADDER_SEARCHES.items():
         added = 0
-        for url in urls:
-            html = fetch_page(url, session=session, delay=2.0)
-            if not html:
-                continue
+        for base_url in urls:
+            max_pages = (max_per_category // 20) + 1  # ~20 products per page
 
-            soup = BeautifulSoup(html, "lxml")
-            products = _parse_json_ld(soup, product_type)
+            for page in range(1, max_pages + 1):
+                url = f"{base_url}?p={page}" if page > 1 else base_url
+                html = fetch_page(url, session=session, delay=2.0)
+                if not html:
+                    break
 
-            for p in products:
-                if p["product_id"] in seen:
-                    continue
-                seen.add(p["product_id"])
-                all_products.append(p)
-                added += 1
+                soup = BeautifulSoup(html, "lxml")
+                products = _parse_json_ld(soup, product_type)
+
+                if not products:
+                    logger.info(f"  → No products on page {page} for UL [{product_type}], stopping")
+                    break
+
+                new_count = 0
+                for p in products:
+                    if p["product_id"] in seen:
+                        continue
+                    seen.add(p["product_id"])
+                    all_products.append(p)
+                    added += 1
+                    new_count += 1
+
+                logger.info(f"UrbanLadder [{product_type}] page {page} -> {new_count} new (cat total: {added}, grand: {len(all_products)})")
+
                 if added >= max_per_category:
                     break
 

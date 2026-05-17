@@ -71,10 +71,10 @@ TOP_P = 0.95                        # Gemini top-p
 # ──────────────────────────────────────────────
 # Known domain values (used for entity matching)
 # ──────────────────────────────────────────────
-ROOM_TYPES = ["bedroom", "living_room", "dining_room", "kids_room", "study"]
+ROOM_TYPES = ["bedroom", "living_room", "drawing_room", "dining_room", "kids_room", "study", "balcony", "pooja_room", "kitchen", "bathroom"]
 STYLES = ["classic", "contemporary", "ethnic", "functional", "minimal", "modern"]
 COLOR_PALETTES = ["cool", "dark wood", "light wood", "neutral", "red and beige", "warm", "white", "wood tones"]
-PRODUCT_TYPES = ["sofa", "bed", "lighting", "table", "storage", "decor", "chair", "textile", "misc"]
+PRODUCT_TYPES = ["sofa", "bed", "lighting", "table", "storage", "decor", "chair", "textile", "appliance", "kitchen_accessory", "outdoor", "misc"]
 PAINT_BRANDS = ["Asian Paints", "Berger", "Nerolac"]
 DECOR_TYPES = ["clock", "curtain", "lamp", "mirror", "vase", "wall art"]
 ROLES = ["ambient lighting", "centerpiece", "dining", "floor decor", "main bed", "main seating", "storage"]

@@ -28,20 +28,37 @@ WOODENSTREET_LISTINGS = {
     "sofa": [
         "https://www.woodenstreet.com/sofa-sets",
         "https://www.woodenstreet.com/l-shaped-sofas",
+        "https://www.woodenstreet.com/recliners",
     ],
     "bed": [
         "https://www.woodenstreet.com/beds",
+        "https://www.woodenstreet.com/bunk-beds",
     ],
     "table": [
         "https://www.woodenstreet.com/coffee-tables",
         "https://www.woodenstreet.com/dining-tables",
+        "https://www.woodenstreet.com/console-tables",
+        "https://www.woodenstreet.com/side-tables",
     ],
     "storage": [
         "https://www.woodenstreet.com/wardrobes",
         "https://www.woodenstreet.com/bookshelves",
+        "https://www.woodenstreet.com/tv-units",
+        "https://www.woodenstreet.com/chest-of-drawers",
     ],
     "decor": [
         "https://www.woodenstreet.com/home-decors",
+        "https://www.woodenstreet.com/mirrors",
+    ],
+    "chair": [
+        "https://www.woodenstreet.com/chairs",
+        "https://www.woodenstreet.com/dining-chairs",
+    ],
+    "drawing_room": [
+        "https://www.woodenstreet.com/display-units",
+    ],
+    "outdoor": [
+        "https://www.woodenstreet.com/outdoor-furniture",
     ],
 }
 

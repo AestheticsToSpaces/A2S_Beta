@@ -61,6 +61,35 @@ FLIPKART_SEARCHES = {
         "https://www.flipkart.com/search?q=tv+unit+entertainment+unit&otracker=search",
         "https://www.flipkart.com/search?q=chest+of+drawers&otracker=search",
     ],
+    "drawing_room": [
+        "https://www.flipkart.com/search?q=accent+chair+for+living+room&otracker=search",
+        "https://www.flipkart.com/search?q=display+cabinet+showcase&otracker=search",
+        "https://www.flipkart.com/search?q=console+table+entryway&otracker=search",
+        "https://www.flipkart.com/search?q=show+piece+for+drawing+room&otracker=search",
+        "https://www.flipkart.com/search?q=center+table+glass+top&otracker=search",
+    ],
+    "appliance": [
+        "https://www.flipkart.com/search?q=smart+tv+43+inch&otracker=search",
+        "https://www.flipkart.com/search?q=split+ac+1.5+ton&otracker=search",
+        "https://www.flipkart.com/search?q=double+door+refrigerator&otracker=search",
+        "https://www.flipkart.com/search?q=microwave+oven+for+home&otracker=search",
+        "https://www.flipkart.com/search?q=water+purifier+ro+uv&otracker=search",
+    ],
+    "kitchen_accessory": [
+        "https://www.flipkart.com/search?q=pressure+cooker+stainless+steel&otracker=search",
+        "https://www.flipkart.com/search?q=non+stick+kadhai+pan+set&otracker=search",
+        "https://www.flipkart.com/search?q=cutting+board+chopping+board&otracker=search",
+        "https://www.flipkart.com/search?q=mixing+bowl+set+kitchen&otracker=search",
+        "https://www.flipkart.com/search?q=stainless+steel+utensils+set&otracker=search",
+    ],
+    "outdoor": [
+        "https://www.flipkart.com/search?q=bistro+set+balcony+furniture&otracker=search",
+        "https://www.flipkart.com/search?q=outdoor+garden+chair&otracker=search",
+        "https://www.flipkart.com/search?q=hammock+for+balcony&otracker=search",
+        "https://www.flipkart.com/search?q=planter+pot+for+balcony&otracker=search",
+        "https://www.flipkart.com/search?q=outdoor+rug+for+balcony&otracker=search",
+        "https://www.flipkart.com/search?q=fairy+lights+for+balcony&otracker=search",
+    ],
 }
 
 
