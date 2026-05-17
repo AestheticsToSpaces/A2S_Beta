@@ -191,11 +191,11 @@ def load_product_catalog() -> pd.DataFrame:
     try:
         conn = get_connection()
         query = """
-            SELECT 
+            SELECT
                 p.id as product_id, p.name as product_name, p.brand, p.category as product_type,
                 p.price as price_value, p.dimensions, p.color as color_palette, p.vendor,
                 p.affiliate_link as affiliate_url, p.image as image_url, p.design_id,
-                d.room_type, d.style, d.total_cost as cost_total_design
+                p.room_type, p.aesthetic_style as style, d.total_cost as cost_total_design
             FROM products p
             LEFT JOIN designs d ON p.design_id = d.id
         """

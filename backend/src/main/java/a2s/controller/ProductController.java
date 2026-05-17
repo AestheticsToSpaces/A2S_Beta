@@ -9,6 +9,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -81,24 +82,30 @@ public class ProductController {
         int created = 0;
         int updated = 0;
 
-        List<Product> existing = productRepository.findAll();
-
         for (ProductImportRequest req : payload) {
             if (req == null || req.name() == null || req.name().isBlank() || req.price() == null) {
                 continue;
             }
 
-            Product product = existing.stream()
-                    .filter(p -> isSameProductSource(p, req))
-                    .findFirst()
-                    .orElseGet(Product::new);
+            String vendor = safe(req.vendor(), "Marketplace");
+            String canonical = canonicalize(req.name());
 
-            boolean isNew = product.getId() == null;
+            // Prefer exact-URL match (same page scraped again), then canonical-name match
+            Product product = null;
+            if (req.sourceUrl() != null && !req.sourceUrl().isBlank()) {
+                product = productRepository.findBySourceUrl(req.sourceUrl()).orElse(null);
+            }
+            if (product == null && !canonical.isBlank()) {
+                product = productRepository.findByVendorAndCanonicalName(vendor, canonical).orElse(null);
+            }
+            boolean isNew = (product == null);
             if (isNew) {
+                product = new Product();
                 product.setId(UUID.randomUUID().toString());
             }
 
             product.setName(req.name());
+            product.setCanonicalName(canonical);
             product.setBrand(cleanBrandFallback(req.brand(), req.vendor()));
             product.setCategory(safe(req.category(), "decor"));
             product.setRoomType(safe(req.roomType(), "Living Room"));
@@ -108,22 +115,31 @@ public class ProductController {
             product.setColor(req.color());
             product.setColorHex(req.colorHex());
             product.setMaterial(req.material());
-            product.setVendor(safe(req.vendor(), "Marketplace"));
+            product.setModel(req.model());
+            product.setVendor(vendor);
+            product.setSourceUrl(req.sourceUrl());
             product.setDescription(req.description());
             product.setAffiliateLink(req.affiliateLink());
             product.setImage(req.image());
+            product.setRating(req.rating());
+            product.setReviewCount(req.reviewCount());
+            product.setSeaterCount(req.seaterCount());
+            product.setPieceCount(req.pieceCount());
+            product.setDrawerCount(req.drawerCount());
+            product.setWeightKg(req.weightKg());
+            product.setWarrantyMonths(req.warrantyMonths());
+            product.setAssemblyRequired(req.assemblyRequired());
+            product.setScrapedAt(LocalDateTime.now());
 
+            if (req.featureTags() != null && !req.featureTags().isEmpty()) {
+                product.setFeatureTags(req.featureTags());
+            }
             if (req.gallery() != null && !req.gallery().isEmpty()) {
                 product.setGallery(req.gallery());
             }
 
             productRepository.save(product);
-            if (isNew) {
-                created++;
-                existing.add(product);
-            } else {
-                updated++;
-            }
+            if (isNew) created++; else updated++;
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -133,13 +149,13 @@ public class ProductController {
         return ResponseEntity.ok(result);
     }
 
-    private boolean isSameProductSource(Product existing, ProductImportRequest incoming) {
-        String existingVendor = normalize(existing.getVendor());
-        String incomingVendor = normalize(incoming.vendor());
-        String existingName = normalize(existing.getName());
-        String incomingName = normalize(incoming.name());
-
-        return Objects.equals(existingVendor, incomingVendor) && Objects.equals(existingName, incomingName);
+    // Normalize product name to a stable dedup key: lowercase, strip punctuation, collapse whitespace
+    private String canonicalize(String name) {
+        if (name == null) return "";
+        return name.toLowerCase(Locale.ROOT)
+                   .replaceAll("[^a-z0-9 ]", " ")
+                   .replaceAll("\\s+", " ")
+                   .trim();
     }
 
     private List<PriceOption> buildPriceComparison(Product current, List<Product> allProducts) {
@@ -433,6 +449,7 @@ public class ProductController {
     public record ProductImportRequest(
             String name,
             String brand,
+            String model,
             String category,
             String roomType,
             String aestheticStyle,
@@ -442,9 +459,19 @@ public class ProductController {
             String colorHex,
             String material,
             String vendor,
+            String sourceUrl,
             String description,
             String affiliateLink,
             String image,
-            List<String> gallery
+            List<String> gallery,
+            Double rating,
+            Integer reviewCount,
+            Integer seaterCount,
+            Integer pieceCount,
+            Integer drawerCount,
+            Double weightKg,
+            Integer warrantyMonths,
+            Boolean assemblyRequired,
+            List<String> featureTags
     ) {}
 }

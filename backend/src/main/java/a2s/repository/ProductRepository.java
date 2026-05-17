@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
@@ -44,4 +45,15 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     @Query("select count(p) from Product p")
     long countAllProducts();
+
+    Optional<Product> findBySourceUrl(String sourceUrl);
+
+    @Query("""
+            select p from Product p
+            where lower(p.vendor) = lower(:vendor)
+              and lower(p.canonicalName) = lower(:canonicalName)
+            """)
+    Optional<Product> findByVendorAndCanonicalName(
+            @Param("vendor") String vendor,
+            @Param("canonicalName") String canonicalName);
 }
