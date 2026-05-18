@@ -1,13 +1,15 @@
 """
 Main Crawler Runner.
 
-Runs all scrapers (IKEA, Amazon, Flipkart), merges results,
-cleans the data, and exports to Excel.
+Runs all configured scrapers (IKEA, Amazon, Flipkart, Pepperfry,
+Urban Ladder, WoodenStreet, HomeLane, Nilkamal, Godrej Interio,
+MiradorHome), merges results, cleans the data, and exports to Excel.
 
 Usage:
     python -m scraper.run_crawler
     python -m scraper.run_crawler --sites ikea amazon
     python -m scraper.run_crawler --sites flipkart --max 20
+    python -m scraper.run_crawler --sites homelane nilkamal
 
 Output:
     scraped_products_YYYYMMDD_HHMMSS.xlsx  (in project root)
@@ -126,6 +128,30 @@ def run_scraper(sites: list[str], max_per_category: int = 200) -> pd.DataFrame:
         products = scrape_woodenstreet(max_per_category=max_per_category)
         all_products.extend(products)
         logger.info(f"WoodenStreet: {len(products)} products")
+
+    if "homelane" in sites:
+        from scraper.homelane_scraper import scrape_homelane
+        products = scrape_homelane(max_per_category=max_per_category)
+        all_products.extend(products)
+        logger.info(f"HomeLane: {len(products)} products")
+
+    if "nilkamal" in sites:
+        from scraper.nilkamal_scraper import scrape_nilkamal
+        products = scrape_nilkamal(max_per_category=max_per_category)
+        all_products.extend(products)
+        logger.info(f"Nilkamal: {len(products)} products")
+
+    if "godrejinterio" in sites:
+        from scraper.godrejinterio_scraper import scrape_godrejinterio
+        products = scrape_godrejinterio(max_per_category=max_per_category)
+        all_products.extend(products)
+        logger.info(f"Godrej Interio: {len(products)} products")
+
+    if "miradorhome" in sites:
+        from scraper.miradorhome_scraper import scrape_miradorhome
+        products = scrape_miradorhome(max_per_category=max_per_category)
+        all_products.extend(products)
+        logger.info(f"MiradorHome: {len(products)} products")
 
     if not all_products:
         logger.warning("No products scraped from any site!")
@@ -373,8 +399,10 @@ def main():
     parser.add_argument(
         "--sites",
         nargs="+",
-        choices=["ikea", "amazon", "flipkart", "pepperfry", "urbanladder", "woodenstreet"],
-        default=["ikea", "amazon", "flipkart", "pepperfry", "urbanladder", "woodenstreet"],
+        choices=["ikea", "amazon", "flipkart", "pepperfry", "urbanladder", "woodenstreet",
+                 "homelane", "nilkamal", "godrejinterio", "miradorhome"],
+        default=["ikea", "amazon", "flipkart", "pepperfry", "urbanladder", "woodenstreet",
+                 "homelane", "nilkamal", "godrejinterio", "miradorhome"],
         help="Sites to scrape (default: all)",
     )
     parser.add_argument(

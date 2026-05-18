@@ -126,6 +126,10 @@ def build_affiliate_url(source_url: str, source: str) -> str:
     - PEPPERFRY_AFFILIATE_ID
     - URBANLADDER_AFFILIATE_ID
     - WOODENSTREET_AFFILIATE_ID
+    - HOMELANE_AFFILIATE_ID
+    - NILKAMAL_AFFILIATE_ID
+    - GODREJINTERIO_AFFILIATE_ID
+    - MIRADORHOME_AFFILIATE_ID
     """
     if not source_url:
         return ""
@@ -165,6 +169,26 @@ def build_affiliate_url(source_url: str, source: str) -> str:
 
         elif "woodenstreet" in src:
             aff = os.getenv("WOODENSTREET_AFFILIATE_ID", "").strip()
+            if aff:
+                query["aff_id"] = [aff]
+
+        elif "homelane" in src:
+            aff = os.getenv("HOMELANE_AFFILIATE_ID", "").strip()
+            if aff:
+                query["aff_id"] = [aff]
+
+        elif "nilkamal" in src:
+            aff = os.getenv("NILKAMAL_AFFILIATE_ID", "").strip()
+            if aff:
+                query["aff_id"] = [aff]
+
+        elif "godrejinterio" in src:
+            aff = os.getenv("GODREJINTERIO_AFFILIATE_ID", "").strip()
+            if aff:
+                query["aff_id"] = [aff]
+
+        elif "miradorhome" in src:
+            aff = os.getenv("MIRADORHOME_AFFILIATE_ID", "").strip()
             if aff:
                 query["aff_id"] = [aff]
 
