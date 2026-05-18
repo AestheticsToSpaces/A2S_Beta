@@ -127,6 +127,8 @@ jobs:
             --set-env-vars \
               GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
               GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
+              NVIDIA_NIM_API_KEY="${{ secrets.NVIDIA_NIM_API_KEY }}" \
+              AZURE_KEY_VAULT_URI="${{ secrets.AZURE_KEY_VAULT_URI }}" \
               PORT="5001"
 
       - name: Deploy frontend

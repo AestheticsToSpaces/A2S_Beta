@@ -10,6 +10,8 @@ from typing import Dict, List, Tuple
 from PIL import Image, ImageFilter, ImageStat
 import requests
 
+from config import NVIDIA_NIM_API_KEY, NVIDIA_NIM_URL, NVIDIA_NIM_MODEL
+
 try:
     from ultralytics import YOLO  # type: ignore
 except Exception:  # pragma: no cover
@@ -259,12 +261,12 @@ def _parse_nim_json(raw_text: str) -> Dict[str, object]:
 
 
 def _infer_direction_with_nim(processed_images: List[Tuple[bytes, int, int]]) -> Dict[str, object]:
-    api_key = os.getenv("NVIDIA_NIM_API_KEY", "").strip()
+    api_key = NVIDIA_NIM_API_KEY
     if not api_key:
         return {"direction": "", "confidence": 0.0, "method": "nim", "reasoning": "NVIDIA NIM key not configured."}
 
-    endpoint = os.getenv("NVIDIA_NIM_URL", "https://integrate.api.nvidia.com/v1/chat/completions")
-    model = os.getenv("NVIDIA_NIM_MODEL", "meta/llama-3.2-90b-vision-instruct")
+    endpoint = NVIDIA_NIM_URL
+    model = NVIDIA_NIM_MODEL
 
     votes: Dict[str, float] = {"N": 0.0, "S": 0.0, "E": 0.0, "W": 0.0, "NE": 0.0, "NW": 0.0, "SE": 0.0, "SW": 0.0}
     reasoning_bits: List[str] = []
