@@ -1,0 +1,58 @@
+name: Repo cleanliness
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  no-scratch-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail on stray scratch / scratchpad files
+        run: |
+          set -e
+          patterns=(
+            "New Text Document*.txt"
+            "Untitled*.txt"
+            "Untitled*.docx"
+            "cp.txt"
+            "*.bak"
+            "*.swp"
+            "*.swo"
+            "*.tmp"
+            "Thumbs.db"
+          )
+
+          # Excluded paths — node_modules, build outputs, vendor dirs
+          # We use find with -not -path filters
+          hits=""
+          for p in "${patterns[@]}"; do
+            found=$(find . \
+              -not -path './.git/*' \
+              -not -path './node_modules/*' \
+              -not -path './*/node_modules/*' \
+              -not -path './*/target/*' \
+              -not -path './*/dist/*' \
+              -not -path './*/build/*' \
+              -not -path './*/.venv/*' \
+              -not -path './*/__pycache__/*' \
+              -type f -iname "$p" 2>/dev/null || true)
+            if [ -n "$found" ]; then
+              hits="$hits$found"$'\n'
+            fi
+          done
+
+          if [ -n "$hits" ]; then
+            echo "::error::Stray scratch / scratchpad files found in the repository:"
+            echo "$hits"
+            echo ""
+            echo "These look like editor scratch files, OS clutter, or accidental commits."
+            echo "Delete them locally and re-push. If the file is legitimate, update"
+            echo ".github/workflows/cleanliness.yml to exclude it."
+            exit 1
+          fi
+
+          echo "Clean — no stray scratch files."
