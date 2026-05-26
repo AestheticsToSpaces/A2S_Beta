@@ -1,0 +1,79 @@
+name: Deploy to Fly.io (backend + LLM)
+
+# Diff-only deploys: each service is built+deployed only when its own files
+# change. This saves GH Actions minutes and avoids unnecessary Fly machine
+# restarts (which would briefly cold-start the app).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: "Force redeploy of all services regardless of diff"
+        required: false
+        default: "false"
+
+concurrency:
+  group: deploy-fly-main
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      llm: ${{ steps.filter.outputs.llm }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/deploy-fly.yml'
+            llm:
+              - 'LLM/**'
+              - '.github/workflows/deploy-fly.yml'
+
+  deploy-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || github.event.inputs.force_all == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy backend
+        run: flyctl deploy --remote-only --config backend/fly.toml ./backend
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-llm:
+    needs: changes
+    if: needs.changes.outputs.llm == 'true' || github.event.inputs.force_all == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy LLM
+        run: flyctl deploy --remote-only --config LLM/fly.toml ./LLM
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  smoke-test:
+    needs: [deploy-backend, deploy-llm]
+    if: always() && (needs.deploy-backend.result == 'success' || needs.deploy-llm.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backend health
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -fsS "https://a2s-backend.fly.dev/api/health" > /tmp/health.json; then
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Backend health check failed after 5 attempts"
+          exit 1

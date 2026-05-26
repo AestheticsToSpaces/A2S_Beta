@@ -1,0 +1,102 @@
+name: Nightly Neon backup + weekly restore drill
+
+on:
+  schedule:
+    # 02:00 UTC every day = 07:30 IST. Off-peak for both regions.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install postgres client + aws cli
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client awscli
+
+      - name: Dump and upload
+        env:
+          NEON_HOST: ${{ secrets.NEON_HOST }}
+          NEON_DB: ${{ secrets.NEON_DB }}
+          NEON_USER: ${{ secrets.NEON_USER }}
+          NEON_PASSWORD: ${{ secrets.NEON_PASSWORD }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          chmod +x scripts/backup_neon.sh
+          ./scripts/backup_neon.sh
+
+  restore-drill:
+    # Once a week (Sundays). A backup you never restored is not a backup.
+    if: github.event.schedule == '0 2 * * 0' || github.event_name == 'workflow_dispatch'
+    needs: dump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install postgres client + aws cli
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client awscli
+
+      - name: Download latest dump
+        env:
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          latest=$(aws s3 ls "s3://$R2_BUCKET/daily/" --endpoint-url "$R2_ENDPOINT" \
+                    | sort -k1,2 | tail -n 1 | awk '{print $4}')
+          aws s3 cp "s3://$R2_BUCKET/daily/$latest" /tmp/latest.sql.gz \
+                    --endpoint-url "$R2_ENDPOINT"
+          gunzip /tmp/latest.sql.gz
+          test -s /tmp/latest.sql
+          echo "Restore-drill: downloaded $latest, size $(wc -c < /tmp/latest.sql) bytes"
+
+      - name: Restore into Neon scratch branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          NEON_DB: ${{ secrets.NEON_DB }}
+          NEON_USER: ${{ secrets.NEON_USER }}
+          NEON_PASSWORD: ${{ secrets.NEON_PASSWORD }}
+        run: |
+          # Create an ephemeral Neon branch, restore into it, count rows,
+          # then delete the branch. Cost: ~zero (Neon copy-on-write).
+          set -euo pipefail
+          BRANCH_NAME="restore-drill-$(date -u +%Y%m%dT%H%M%SZ)"
+
+          BRANCH_RESP=$(curl -fsS -X POST \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\":{\"name\":\"$BRANCH_NAME\"}}")
+          BRANCH_HOST=$(echo "$BRANCH_RESP" | python3 -c \
+            'import sys,json; d=json.load(sys.stdin); print(d["endpoints"][0]["host"])')
+          BRANCH_ID=$(echo "$BRANCH_RESP" | python3 -c \
+            'import sys,json; print(json.load(sys.stdin)["branch"]["id"])')
+
+          PGPASSWORD="$NEON_PASSWORD" psql \
+            -h "$BRANCH_HOST" -U "$NEON_USER" -d "$NEON_DB" \
+            -f /tmp/latest.sql --quiet
+
+          rows=$(PGPASSWORD="$NEON_PASSWORD" psql \
+            -h "$BRANCH_HOST" -U "$NEON_USER" -d "$NEON_DB" -At \
+            -c "SELECT count(*) FROM product_list_item;")
+          echo "Restore-drill row count: $rows"
+
+          # Hard floor — if catalog falls below 500 rows, fail loudly.
+          if [ "$rows" -lt 500 ]; then
+            echo "ERROR: restore drill recovered only $rows rows, refusing to consider this backup healthy" >&2
+            exit 1
+          fi
+
+          curl -fsS -X DELETE \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID" \
+            -H "Authorization: Bearer $NEON_API_KEY" > /dev/null
